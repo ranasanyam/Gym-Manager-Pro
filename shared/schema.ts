@@ -5,11 +5,15 @@ import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-  role: text("role", { enum: ["owner", "trainer", "member"] }).notNull().default("member"),
   fullName: text("full_name").notNull(),
+  mobileNumber: text("mobile_number").notNull().unique(),
   email: text("email"),
+  gender: text("gender"),
+  ageOrDob: text("age_or_dob"),
+  city: text("city").notNull(),
+  role: text("role", { enum: ["owner", "trainer", "member"] }), // Nullable
+  password: text("password").notNull(),
+  username: text("username").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -66,7 +70,9 @@ export const usersRelations = relations(users, ({ many }) => ({
 }));
 
 // Schemas
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true }).extend({
+  mobileNumber: z.string().min(10, "Mobile number must be at least 10 digits"),
+});
 export const insertClassSchema = createInsertSchema(classes).omit({ id: true });
 export const insertBookingSchema = createInsertSchema(bookings).omit({ id: true, createdAt: true });
 export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({ id: true, startDate: true });
