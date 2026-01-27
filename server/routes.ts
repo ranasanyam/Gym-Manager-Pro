@@ -141,7 +141,9 @@ async function seedDatabase() {
       password: "password123",
       role: "owner",
       fullName: "Gym Owner",
-      email: "owner@gym.com"
+      email: "owner@gym.com",
+      mobileNumber: "1234567890",
+      city: "New York"
     });
 
     // Create Trainer
@@ -150,7 +152,9 @@ async function seedDatabase() {
       password: "password123",
       role: "trainer",
       fullName: "John Trainer",
-      email: "john@gym.com"
+      email: "john@gym.com",
+      mobileNumber: "9876543210",
+      city: "Los Angeles"
     });
 
     // Create Member
@@ -159,7 +163,9 @@ async function seedDatabase() {
       password: "password123",
       role: "member",
       fullName: "Alice Member",
-      email: "alice@gym.com"
+      email: "alice@gym.com",
+      mobileNumber: "5556667777",
+      city: "Chicago"
     });
 
     // Create Class
