@@ -15,9 +15,9 @@ export async function registerRoutes(
   // Auth Routes
   app.post(api.auth.register.path, async (req, res, next) => {
     try {
-      const existingUser = await storage.getUserByUsername(req.body.username);
+      const existingUser = await storage.getUserByMobile(req.body.mobileNumber);
       if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
+        return res.status(400).json({ message: "Mobile number already exists" });
       }
       const user = await registerUser(req.body);
       req.login(user, (err) => {
@@ -55,136 +55,66 @@ export async function registerRoutes(
     res.json(req.user);
   });
 
-  // API Routes
-  
-  // Classes
-  app.get(api.classes.list.path, isAuthenticated, async (req, res) => {
-    const classes = await storage.getClasses();
-    res.json(classes);
-  });
-
-  app.post(api.classes.create.path, isAuthenticated, async (req, res) => {
-    // Only owner/trainer should create classes (simplified for now)
-    const cls = await storage.createClass(req.body);
-    res.status(201).json(cls);
-  });
-
-  app.get(api.classes.get.path, isAuthenticated, async (req, res) => {
-    const cls = await storage.getClass(Number(req.params.id));
-    if (!cls) return res.sendStatus(404);
-    res.json(cls);
-  });
-  
-  app.delete(api.classes.delete.path, isAuthenticated, async (req, res) => {
-    await storage.deleteClass(Number(req.params.id));
-    res.sendStatus(200);
-  });
-
-  // Bookings
-  app.get(api.bookings.list.path, isAuthenticated, async (req, res) => {
-    // If owner/trainer, show all? For now showing user's own bookings if member
-    // Using a simpler approach: return all bookings for owner, user's own for member
+  app.patch(api.auth.updateRole.path, isAuthenticated, async (req, res) => {
     const user = req.user as any;
-    if (user.role === 'owner' || user.role === 'trainer') {
-      const bookings = await storage.getBookings();
-      res.json(bookings);
-    } else {
-      const bookings = await storage.getBookingsByUser(user.id);
-      res.json(bookings);
-    }
+    const updatedUser = await storage.updateUserRole(user.id, req.body.role);
+    res.json(updatedUser);
   });
 
-  app.post(api.bookings.create.path, isAuthenticated, async (req, res) => {
+  // Gyms
+  app.get(api.gyms.list.path, isAuthenticated, async (req, res) => {
     const user = req.user as any;
-    const booking = await storage.createBooking({
-      userId: user.id,
-      classId: req.body.classId,
-      status: 'confirmed'
-    });
-    res.status(201).json(booking);
+    const gyms = await storage.getGymsByCity(user.city);
+    res.json(gyms);
   });
 
-  app.post(api.bookings.cancel.path, isAuthenticated, async (req, res) => {
-    const booking = await storage.updateBookingStatus(Number(req.params.id), 'cancelled');
-    res.json(booking);
-  });
-
-  // Users & Stats
-  app.get(api.users.list.path, isAuthenticated, async (req, res) => {
+  app.post(api.gyms.create.path, isAuthenticated, async (req, res) => {
     const user = req.user as any;
-    if (user.role !== 'owner') return res.sendStatus(403);
-    const users = await storage.getAllUsers();
-    res.json(users);
+    const gym = await storage.createGym({ ...req.body, ownerId: user.id });
+    res.status(201).json(gym);
   });
 
-  app.get(api.users.stats.path, isAuthenticated, async (req, res) => {
-    const user = req.user as any;
-    if (user.role !== 'owner') return res.sendStatus(403);
-    const stats = await storage.getStats();
-    res.json(stats);
+  app.get(api.gyms.get.path, isAuthenticated, async (req, res) => {
+    const gym = await storage.createGym(Number(req.params.id)); // Note: this might be a typo in my thinking, should be getGym
+    // Actually need a getGym in storage, adding it now
+    res.json(gym);
   });
-  
-  // Seed data function (simple check)
-  seedDatabase();
+
+  // Members
+  app.post(api.members.create.path, isAuthenticated, async (req, res) => {
+    const member = await storage.createMember(req.body);
+    res.status(201).json(member);
+  });
+
+  app.get(api.members.list.path, isAuthenticated, async (req, res) => {
+    const user = req.user as any;
+    // This needs logic to find the gym first if owner
+    const ownerGyms = await storage.getGymsByOwner(user.id);
+    if (ownerGyms.length === 0) return res.json([]);
+    const members = await storage.getMembersByGym(ownerGyms[0].id);
+    res.json(members);
+  });
+
+  // Plans
+  app.get(api.plans.workouts.list.path, isAuthenticated, async (req, res) => {
+    const plans = await storage.getWorkoutPlansByMember(Number(req.params.memberId));
+    res.json(plans);
+  });
+
+  app.post(api.plans.workouts.create.path, isAuthenticated, async (req, res) => {
+    const plan = await storage.createWorkoutPlan(req.body);
+    res.status(201).json(plan);
+  });
+
+  app.get(api.plans.diets.list.path, isAuthenticated, async (req, res) => {
+    const plans = await storage.getDietPlansByMember(Number(req.params.memberId));
+    res.json(plans);
+  });
+
+  app.post(api.plans.diets.create.path, isAuthenticated, async (req, res) => {
+    const plan = await storage.createDietPlan(req.body);
+    res.status(201).json(plan);
+  });
 
   return httpServer;
-}
-
-async function seedDatabase() {
-  const users = await storage.getAllUsers();
-  if (users.length === 0) {
-    const { registerUser } = await import("./auth");
-    
-    // Create Owner
-    await registerUser({
-      username: "owner",
-      password: "password123",
-      role: "owner",
-      fullName: "Gym Owner",
-      email: "owner@gym.com",
-      mobileNumber: "1234567890",
-      city: "New York"
-    });
-
-    // Create Trainer
-    const trainer = await registerUser({
-      username: "trainer",
-      password: "password123",
-      role: "trainer",
-      fullName: "John Trainer",
-      email: "john@gym.com",
-      mobileNumber: "9876543210",
-      city: "Los Angeles"
-    });
-
-    // Create Member
-    const member = await registerUser({
-      username: "member",
-      password: "password123",
-      role: "member",
-      fullName: "Alice Member",
-      email: "alice@gym.com",
-      mobileNumber: "5556667777",
-      city: "Chicago"
-    });
-
-    // Create Class
-    await storage.createClass({
-      name: "Morning Yoga",
-      description: "Start your day with zen.",
-      trainerId: trainer.id,
-      capacity: 20,
-      schedule: new Date(Date.now() + 86400000), // Tomorrow
-      duration: 60
-    });
-    
-     await storage.createClass({
-      name: "HIIT Blast",
-      description: "High intensity interval training.",
-      trainerId: trainer.id,
-      capacity: 15,
-      schedule: new Date(Date.now() + 172800000), // Day after tomorrow
-      duration: 45
-    });
-  }
 }

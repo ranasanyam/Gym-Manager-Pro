@@ -9,7 +9,6 @@ import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 
 const scryptAsync = promisify(scrypt);
-
 const PgSession = connectPg(session);
 
 async function hashPassword(password: string) {
@@ -25,40 +24,36 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-// Helper to create user with hashed password
 export const registerUser = async (user: any) => {
   const hashedPassword = await hashPassword(user.password);
-  return storage.createUser({ ...user, password: hashedPassword });
+  // Ensure username is set if not provided (fallback to mobile)
+  const username = user.username || user.mobileNumber;
+  return storage.createUser({ ...user, password: hashedPassword, username });
 };
 
 export function setupAuth(app: Express, pool: any) {
-  // Session setup
-  app.use(
-    session({
-      store: new PgSession({ pool, createTableIfMissing: true }),
-      secret: process.env.SESSION_SECRET || "super_secret_session_key",
-      resave: false,
-      saveUninitialized: false,
-      cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }, // 30 days
-    })
-  );
+  app.use(session({
+    store: new PgSession({ pool, createTableIfMissing: true }),
+    secret: process.env.SESSION_SECRET || "gym_core_secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
+  }));
 
   app.use(passport.initialize());
   app.use(passport.session());
 
-  passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
-        }
-        return done(null, user);
-      } catch (err) {
-        return done(err);
+  passport.use(new LocalStrategy({ usernameField: 'mobileNumber' }, async (mobileNumber, password, done) => {
+    try {
+      const user = await storage.getUserByMobile(mobileNumber);
+      if (!user || !(await comparePasswords(password, user.password))) {
+        return done(null, false);
       }
-    })
-  );
+      return done(null, user);
+    } catch (err) {
+      return done(err);
+    }
+  }));
 
   passport.serializeUser((user, done) => done(null, (user as SelectUser).id));
   passport.deserializeUser(async (id: number, done) => {
@@ -73,10 +68,7 @@ export function setupAuth(app: Express, pool: any) {
   return { registerUser };
 }
 
-// Middleware to check authentication
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  if (req.isAuthenticated()) {
-    return next();
-  }
+  if (req.isAuthenticated()) return next();
   res.status(401).json({ message: "Unauthorized" });
 }

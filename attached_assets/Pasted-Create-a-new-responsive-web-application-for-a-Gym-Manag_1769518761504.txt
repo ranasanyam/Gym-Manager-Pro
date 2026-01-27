@@ -1,0 +1,275 @@
+Create a new responsive web application for a Gym Management Platform.
+
+The application should be built from scratch and support multiple user roles, onboarding flows, and gym operations as described below.
+
+====================================
+1. USER ROLES
+====================================
+
+The app must support these roles:
+- Gym Owner
+- Trainer
+- Member
+- Guest (not logged in)
+
+====================================
+2. USER AUTHENTICATION & ONBOARDING
+====================================
+
+User Signup:
+- Allow users to sign up using:
+  - Full Name
+  - Mobile Number (unique)
+  - Email (optional)
+  - Gender (optional)
+  - Age or Date of Birth (optional)
+  - City
+- After signup:
+  - Create the user account
+  - Log the user in
+  - Do NOT assign any role yet
+  - Redirect to a "Select User Type" page
+
+User Login:
+- Login using mobile number
+- If mobile number exists, log the user in
+- If mobile number does not exist, redirect to Sign Up
+- After login:
+  - If user role is NULL, redirect to Select User Type page
+  - If role exists, redirect based on role
+
+====================================
+3. SELECT USER TYPE FLOW
+====================================
+
+Create a "Select User Type" page with two options:
+- "I am a Gym Owner"
+- "I am a Member"
+
+If user selects Gym Owner:
+- Assign role = OWNER
+- Redirect to Add Gym Details page
+
+If user selects Member:
+- Assign role = MEMBER
+- Redirect to Member Home page (Gym Discovery)
+
+====================================
+4. GYM OWNER ONBOARDING
+====================================
+
+Gym Data Model:
+- id
+- ownerId (User reference)
+- name
+- address
+- city
+- contactNumber
+- gymImages (optional)
+- gpayQr (optional)
+- phonepeQr (optional)
+- isActive
+
+Add Gym Details Page:
+- Gym Name
+- Gym Address
+- City
+- Contact Number
+- Upload Gym Images (optional)
+- Upload GPay QR (optional)
+- Upload PhonePe QR (optional)
+
+After saving gym details:
+- Redirect to Gym Owner Dashboard
+
+Gym Owner can add multiple gyms later.
+
+====================================
+5. GLOBAL APP LAYOUT
+====================================
+
+Create a global layout with:
+- Left sidebar
+- Top navigation bar
+- Main content area
+
+Sidebar menu must change based on role:
+
+Gym Owner Sidebar:
+- Dashboard
+- Gyms
+- Members
+- Trainers
+- Attendance
+- Payments
+- Workout Plans
+- Diet Plans
+- Notifications
+- Reports
+- Settings
+
+Trainer Sidebar:
+- Dashboard
+- Assigned Members
+- Workout Plans
+- Diet Plans
+- Profile
+
+Member Sidebar:
+- Dashboard
+- Workout
+- Diet
+- Attendance
+- Payments
+- Notifications
+- Profile
+
+====================================
+6. ROLE-BASED ACCESS CONTROL
+====================================
+
+- Users can only access pages allowed for their role
+- Redirect unauthorized access
+- Redirect unauthenticated users to Login page
+
+====================================
+7. MEMBER HOME (GYM DISCOVERY)
+====================================
+
+Create a Member Home page that:
+- Shows list of gyms in the user’s city
+- Displays gym cards with:
+  - Gym image
+  - Gym name
+  - Address
+- Allows viewing gym details
+
+====================================
+8. MEMBERS & TRAINERS MANAGEMENT
+====================================
+
+Member Model:
+- id
+- userId
+- gymId
+- membershipType (FREE, PAID, PERSONAL)
+- startDate
+- endDate
+- assignedTrainerId
+
+Trainer Model:
+- id
+- userId
+- gymId
+- specialization (optional)
+
+Gym Owner can:
+- Add members using mobile number
+  - If user exists, link them
+  - If not, create user and assign MEMBER role
+- Add trainers and assign them to gyms
+
+====================================
+9. ATTENDANCE MANAGEMENT
+====================================
+
+Attendance Model:
+- memberId
+- gymId
+- checkInTime
+- method (QR or MANUAL)
+
+Features:
+- Gym owners can view attendance reports
+- Members can view their attendance history
+
+====================================
+10. PAYMENTS MANAGEMENT
+====================================
+
+Payment Model:
+- memberId
+- gymId
+- amount
+- paymentMethod (GPAY, PHONEPE, CASH)
+- paymentDate
+- status
+
+Features:
+- Gym owners can track payments and revenue
+- Members can view their payment history
+
+====================================
+11. WORKOUT PLANS (WEEKLY)
+====================================
+
+Workout Plan Features:
+- Gym Owners and Trainers can create workout plans
+- Plans are assigned to individual members
+- Plans are weekly (Monday to Sunday)
+- Each day supports multiple exercises with sets and reps
+- Only paid/personal members can access workout plans
+
+Members:
+- Can only view their workout plans
+- Cannot edit plans
+
+====================================
+12. DIET PLANS (WEEKLY)
+====================================
+
+Diet Plan Features:
+- Gym Owners and Trainers can create diet plans
+- Plans are weekly (Monday to Sunday)
+- Each day includes:
+  - Breakfast
+  - Lunch
+  - Snacks
+  - Dinner
+- Some diet plans can be free, others paid
+
+Members:
+- Can only view assigned diet plans
+
+====================================
+13. MEMBER DASHBOARD
+====================================
+
+Create a Member Dashboard that shows:
+- Membership status and expiry date
+- Today's workout plan (based on current day)
+- Today's diet plan
+- Notifications
+
+If no plan exists, show friendly placeholder messages.
+
+====================================
+14. NOTIFICATIONS
+====================================
+
+Notification Features:
+- Gym owners can send notifications:
+  - Membership expiry reminders
+  - Offers
+  - Holidays
+- Members can view notifications in their dashboard
+
+====================================
+15. REPORTS
+====================================
+
+Reports for Gym Owners:
+- Monthly revenue
+- Active members
+- Attendance summary
+
+Display reports using charts and tables.
+
+====================================
+16. GENERAL REQUIREMENTS
+====================================
+
+- Use a clean, modern SaaS-style UI
+- Make the app fully responsive
+- Keep logic simple and scalable
+- Ensure smooth onboarding and role flow

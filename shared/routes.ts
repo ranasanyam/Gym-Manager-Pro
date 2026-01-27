@@ -1,20 +1,23 @@
 import { z } from 'zod';
-import { insertUserSchema, insertClassSchema, insertBookingSchema, users, classes, bookings, subscriptions } from './schema';
+import { 
+  insertUserSchema, 
+  insertGymSchema, 
+  insertGymMemberSchema, 
+  insertWorkoutPlanSchema, 
+  insertDietPlanSchema,
+  users, 
+  gyms, 
+  gymMembers, 
+  attendance, 
+  payments, 
+  workoutPlans, 
+  dietPlans 
+} from './schema';
 
 export const errorSchemas = {
-  validation: z.object({
-    message: z.string(),
-    field: z.string().optional(),
-  }),
-  notFound: z.object({
-    message: z.string(),
-  }),
-  internal: z.object({
-    message: z.string(),
-  }),
-  unauthorized: z.object({
-    message: z.string(),
-  }),
+  validation: z.object({ message: z.string(), field: z.string().optional() }),
+  notFound: z.object({ message: z.string() }),
+  unauthorized: z.object({ message: z.string() }),
 };
 
 export const api = {
@@ -23,120 +26,44 @@ export const api = {
       method: 'POST' as const,
       path: '/api/register',
       input: insertUserSchema,
-      responses: {
-        201: z.custom<typeof users.$inferSelect>(),
-        400: errorSchemas.validation,
-      },
+      responses: { 201: z.custom<typeof users.$inferSelect>(), 400: errorSchemas.validation },
     },
     login: {
       method: 'POST' as const,
       path: '/api/login',
-      input: z.object({
-        username: z.string(),
-        password: z.string(),
-      }),
-      responses: {
-        200: z.custom<typeof users.$inferSelect>(),
-        401: errorSchemas.unauthorized,
-      },
+      input: z.object({ mobileNumber: z.string(), password: z.string() }),
+      responses: { 200: z.custom<typeof users.$inferSelect>(), 401: errorSchemas.unauthorized },
     },
-    logout: {
-      method: 'POST' as const,
-      path: '/api/logout',
-      responses: {
-        200: z.void(),
-      },
-    },
-    me: {
-      method: 'GET' as const,
-      path: '/api/user',
-      responses: {
-        200: z.custom<typeof users.$inferSelect>(),
-        401: errorSchemas.unauthorized,
-      },
+    logout: { method: 'POST' as const, path: '/api/logout', responses: { 200: z.void() } },
+    me: { method: 'GET' as const, path: '/api/user', responses: { 200: z.custom<typeof users.$inferSelect>(), 401: errorSchemas.unauthorized } },
+    updateRole: {
+      method: 'PATCH' as const,
+      path: '/api/user/role',
+      input: z.object({ role: z.enum(['owner', 'member']) }),
+      responses: { 200: z.custom<typeof users.$inferSelect>() },
     },
   },
-  classes: {
-    list: {
-      method: 'GET' as const,
-      path: '/api/classes',
-      responses: {
-        200: z.array(z.custom<typeof classes.$inferSelect & { trainer?: typeof users.$inferSelect }>()),
-      },
+  gyms: {
+    list: { method: 'GET' as const, path: '/api/gyms', responses: { 200: z.array(z.custom<typeof gyms.$inferSelect>()) } },
+    create: { method: 'POST' as const, path: '/api/gyms', input: insertGymSchema, responses: { 201: z.custom<typeof gyms.$inferSelect>() } },
+    get: { method: 'GET' as const, path: '/api/gyms/:id', responses: { 200: z.custom<typeof gyms.$inferSelect>(), 404: errorSchemas.notFound } },
+  },
+  members: {
+    list: { method: 'GET' as const, path: '/api/members', responses: { 200: z.array(z.custom<typeof gymMembers.$inferSelect & { user: typeof users.$inferSelect }>()) } },
+    create: { method: 'POST' as const, path: '/api/members', input: insertGymMemberSchema, responses: { 201: z.custom<typeof gymMembers.$inferSelect>() } },
+  },
+  plans: {
+    workouts: { 
+      list: { method: 'GET' as const, path: '/api/members/:memberId/workouts', responses: { 200: z.array(z.custom<typeof workoutPlans.$inferSelect>()) } },
+      create: { method: 'POST' as const, path: '/api/workouts', input: insertWorkoutPlanSchema, responses: { 201: z.custom<typeof workoutPlans.$inferSelect>() } },
     },
-    create: {
-      method: 'POST' as const,
-      path: '/api/classes',
-      input: insertClassSchema,
-      responses: {
-        201: z.custom<typeof classes.$inferSelect>(),
-        400: errorSchemas.validation,
-        401: errorSchemas.unauthorized,
-      },
-    },
-    get: {
-      method: 'GET' as const,
-      path: '/api/classes/:id',
-      responses: {
-        200: z.custom<typeof classes.$inferSelect>(),
-        404: errorSchemas.notFound,
-      },
-    },
-    delete: {
-      method: 'DELETE' as const,
-      path: '/api/classes/:id',
-      responses: {
-        200: z.void(),
-        401: errorSchemas.unauthorized,
-      },
+    diets: {
+      list: { method: 'GET' as const, path: '/api/members/:memberId/diets', responses: { 200: z.array(z.custom<typeof dietPlans.$inferSelect>()) } },
+      create: { method: 'POST' as const, path: '/api/diets', input: insertDietPlanSchema, responses: { 201: z.custom<typeof dietPlans.$inferSelect>() } },
     }
   },
-  bookings: {
-    list: {
-      method: 'GET' as const,
-      path: '/api/bookings',
-      responses: {
-        200: z.array(z.custom<typeof bookings.$inferSelect & { class: typeof classes.$inferSelect }>()),
-      },
-    },
-    create: {
-      method: 'POST' as const,
-      path: '/api/bookings',
-      input: insertBookingSchema,
-      responses: {
-        201: z.custom<typeof bookings.$inferSelect>(),
-        400: errorSchemas.validation,
-      },
-    },
-    cancel: {
-      method: 'POST' as const,
-      path: '/api/bookings/:id/cancel',
-      responses: {
-        200: z.custom<typeof bookings.$inferSelect>(),
-        404: errorSchemas.notFound,
-      },
-    },
-  },
-  users: {
-    list: {
-      method: 'GET' as const,
-      path: '/api/users', // Admin/Owner only
-      responses: {
-        200: z.array(z.custom<typeof users.$inferSelect>()),
-      },
-    },
-    stats: {
-      method: 'GET' as const,
-      path: '/api/stats', // Owner dashboard stats
-      responses: {
-        200: z.object({
-          totalMembers: z.number(),
-          activeClasses: z.number(),
-          totalBookings: z.number(),
-          revenue: z.number(), // Mock revenue
-        }),
-      },
-    }
+  stats: {
+    owner: { method: 'GET' as const, path: '/api/stats/owner', responses: { 200: z.object({ totalRevenue: z.number(), activeMembers: z.number() }) } },
   }
 };
 
@@ -144,9 +71,7 @@ export function buildUrl(path: string, params?: Record<string, string | number>)
   let url = path;
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
-      if (url.includes(`:${key}`)) {
-        url = url.replace(`:${key}`, String(value));
-      }
+      url = url.replace(`:${key}`, String(value));
     });
   }
   return url;
