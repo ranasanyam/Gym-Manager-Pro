@@ -8,16 +8,16 @@ export function useStats() {
       const res = await fetch(api.stats.owner.path, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch stats");
       const data = await res.json();
-      return data; // Return raw data if parsing fails
+      return data;
     },
   });
 }
 
 export function useUsersList() {
   return useQuery({
-    queryKey: [api.users.list.path],
+    queryKey: [api.members.list.path],
     queryFn: async () => {
-      const res = await fetch(api.users.list.path, { credentials: "include" });
+      const res = await fetch(api.members.list.path, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch users");
       const data = await res.json();
       return data;

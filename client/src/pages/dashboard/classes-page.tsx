@@ -51,7 +51,7 @@ export default function ClassesPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {classes?.map((cls) => (
+        {classes?.map((cls: any) => (
           <Card key={cls?.id} className="group border-none shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
             <div className="h-2 w-full bg-gradient-to-r from-primary to-blue-400" />
             <CardHeader className="pb-3">
@@ -108,7 +108,7 @@ function CreateClassDialog({ onClose }: { onClose: () => void }) {
   const createClass = useCreateClass();
   const { data: users } = useUsersList();
   
-  const trainers = Array.isArray(users) ? users.filter(u => u?.role === 'trainer') : [];
+  const trainers = Array.isArray(users) ? (users as any[]).filter(u => u?.role === 'trainer') : [];
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -222,7 +222,7 @@ function CreateClassDialog({ onClose }: { onClose: () => void }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {trainers.map((trainer) => (
+                    {trainers.map((trainer: any) => (
                       <SelectItem key={trainer?.id} value={trainer?.id?.toString() || ""}>
                         {trainer?.fullName || "Unknown Trainer"}
                       </SelectItem>
