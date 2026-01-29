@@ -64,7 +64,7 @@ export async function registerRoutes(
   // Gyms
   app.get(api.gyms.list.path, isAuthenticated, async (req, res) => {
     const user = req.user as any;
-    const gyms = await storage.getGymsByCity(user.city);
+    const gyms = await storage.getGymsByCity(user.city || "");
     res.json(gyms);
   });
 
@@ -75,8 +75,8 @@ export async function registerRoutes(
   });
 
   app.get(api.gyms.get.path, isAuthenticated, async (req, res) => {
-    const gym = await storage.createGym(Number(req.params.id)); // Note: this might be a typo in my thinking, should be getGym
-    // Actually need a getGym in storage, adding it now
+    const gym = await storage.getGym(Number(req.params.id));
+    if (!gym) return res.sendStatus(404);
     res.json(gym);
   });
 
@@ -88,7 +88,6 @@ export async function registerRoutes(
 
   app.get(api.members.list.path, isAuthenticated, async (req, res) => {
     const user = req.user as any;
-    // This needs logic to find the gym first if owner
     const ownerGyms = await storage.getGymsByOwner(user.id);
     if (ownerGyms.length === 0) return res.json([]);
     const members = await storage.getMembersByGym(ownerGyms[0].id);
@@ -114,6 +113,16 @@ export async function registerRoutes(
   app.post(api.plans.diets.create.path, isAuthenticated, async (req, res) => {
     const plan = await storage.createDietPlan(req.body);
     res.status(201).json(plan);
+  });
+
+  app.get(api.stats.owner.path, isAuthenticated, async (req, res) => {
+    const user = req.user as any;
+    if (user.role !== 'owner') return res.sendStatus(403);
+    // Simple mock stats for now
+    res.json({
+      totalRevenue: 5000,
+      activeMembers: 120
+    });
   });
 
   return httpServer;

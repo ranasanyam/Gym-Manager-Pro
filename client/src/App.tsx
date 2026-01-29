@@ -8,6 +8,7 @@ import { LayoutShell } from "@/components/layout-shell";
 import { Loader2 } from "lucide-react";
 
 import AuthPage from "@/pages/auth-page";
+import OnboardingPage from "@/pages/onboarding-page";
 import NotFound from "@/pages/not-found";
 import OwnerDashboard from "@/pages/dashboard/owner-dashboard";
 import ClassesPage from "@/pages/dashboard/classes-page";
@@ -15,7 +16,6 @@ import UsersPage from "@/pages/dashboard/users-page";
 import SchedulePage from "@/pages/dashboard/schedule-page";
 import MemberDashboard from "@/pages/dashboard/member-dashboard";
 
-// Protected Route Wrapper
 function ProtectedRoute({ 
   component: Component, 
   allowedRoles = [] 
@@ -37,27 +37,28 @@ function ProtectedRoute({
     return <Redirect to="/auth" />;
   }
 
+  if (!user.role) {
+    return <Redirect to="/onboarding" />;
+  }
+
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    // Redirect to their appropriate dashboard if they try to access unauthorized page
     return <Redirect to="/dashboard" />;
   }
 
   return <Component />;
 }
 
-// Dashboard Router based on Role
 function DashboardHome() {
   const { user, isLoading } = useAuth();
 
   if (isLoading) return null;
-  
   if (!user) return <Redirect to="/auth" />;
+  if (!user.role) return <Redirect to="/onboarding" />;
 
   switch (user.role) {
     case "owner":
       return <OwnerDashboard />;
     case "trainer":
-      // For now trainer sees schedule page as home, could be expanded later
       return <Redirect to="/dashboard/schedule" />;
     case "member":
     default:
@@ -69,32 +70,25 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/onboarding" component={OnboardingPage} />
       
-      {/* Root redirect */}
       <Route path="/">
-        {params => <Redirect to="/dashboard" />}
+        {() => <Redirect to="/dashboard" />}
       </Route>
 
-      {/* Dashboard Routes wrapped in Layout */}
       <Route path="/dashboard*">
         <LayoutShell>
           <Switch>
             <Route path="/dashboard" component={DashboardHome} />
-            
-            {/* Owner Routes */}
             <Route path="/dashboard/classes">
               <ProtectedRoute component={ClassesPage} allowedRoles={['owner']} />
             </Route>
             <Route path="/dashboard/users">
               <ProtectedRoute component={UsersPage} allowedRoles={['owner']} />
             </Route>
-
-            {/* Shared/Member Routes */}
             <Route path="/dashboard/schedule">
               <ProtectedRoute component={SchedulePage} />
             </Route>
-
-            {/* Fallback */}
             <Route component={NotFound} />
           </Switch>
         </LayoutShell>
@@ -105,7 +99,7 @@ function Router() {
   );
 }
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -117,5 +111,3 @@ function App() {
     </QueryClientProvider>
   );
 }
-
-export default App;
