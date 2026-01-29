@@ -68,11 +68,10 @@ function useRegisterMutation() {
       return await res.json();
     },
     onSuccess: (user: User) => {
-      // Note: Registration doesn't automatically login in this flow, but it could.
-      // For now, we'll just redirect or show success.
+      queryClient.setQueryData([api.auth.me.path], user);
       toast({
         title: "Registration successful",
-        description: "Please log in with your new account",
+        description: "Your account has been created",
       });
     },
     onError: (error: Error) => {
