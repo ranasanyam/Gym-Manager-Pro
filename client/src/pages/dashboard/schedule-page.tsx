@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format, isPast } from "date-fns";
-import { Calendar as CalendarIcon, Clock, User, CheckCircle2 } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, User } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -16,9 +16,9 @@ export default function SchedulePage() {
   const [selectedClass, setSelectedClass] = useState<any>(null);
 
   const handleBook = () => {
-    if (!selectedClass) return;
+    if (!selectedClass || !user) return;
     createBooking.mutate({
-      userId: user!.id,
+      userId: user.id,
       classId: selectedClass.id,
       status: "confirmed"
     }, {
@@ -30,9 +30,8 @@ export default function SchedulePage() {
     return <div className="text-center py-10">Loading schedule...</div>;
   }
 
-  // Group classes by day (basic implementation)
-  const upcomingClasses = classes?.filter(c => !isPast(new Date(c.schedule)))
-    .sort((a, b) => new Date(a.schedule).getTime() - new Date(b.schedule).getTime()) || [];
+  const upcomingClasses = Array.isArray(classes) ? classes.filter(c => c?.schedule && !isPast(new Date(c.schedule)))
+    .sort((a, b) => new Date(a!.schedule).getTime() - new Date(b!.schedule).getTime()) : [];
 
   return (
     <div className="space-y-8">
@@ -50,29 +49,29 @@ export default function SchedulePage() {
           </div>
         ) : (
           upcomingClasses.map((cls) => (
-            <Card key={cls.id} className="border-none shadow-sm hover:shadow-md transition-shadow">
+            <Card key={cls?.id} className="border-none shadow-sm hover:shadow-md transition-shadow">
               <CardContent className="p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
                 <div className="flex flex-col items-center justify-center bg-blue-50 text-blue-700 w-16 h-16 rounded-xl shrink-0">
-                  <span className="text-xs font-bold uppercase">{format(new Date(cls.schedule), "MMM")}</span>
-                  <span className="text-xl font-bold">{format(new Date(cls.schedule), "d")}</span>
+                  <span className="text-xs font-bold uppercase">{cls?.schedule ? format(new Date(cls.schedule), "MMM") : ""}</span>
+                  <span className="text-xl font-bold">{cls?.schedule ? format(new Date(cls.schedule), "d") : ""}</span>
                 </div>
                 
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold font-display text-slate-900">{cls.name}</h3>
+                    <h3 className="text-lg font-bold font-display text-slate-900">{cls?.name || "Untitled Class"}</h3>
                     <Badge variant="outline" className="text-xs font-normal">
-                      {cls.duration} min
+                      {cls?.duration || 0} min
                     </Badge>
                   </div>
-                  <p className="text-slate-500 text-sm">{cls.description}</p>
+                  <p className="text-slate-500 text-sm">{cls?.description}</p>
                   <div className="flex items-center gap-4 text-xs text-slate-500 mt-2">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      {format(new Date(cls.schedule), "h:mm a")}
+                      {cls?.schedule ? format(new Date(cls.schedule), "h:mm a") : "TBA"}
                     </span>
                     <span className="flex items-center gap-1">
                       <User className="h-3 w-3" />
-                      {cls.trainer?.fullName || "TBA"}
+                      {cls?.trainer?.fullName || "TBA"}
                     </span>
                   </div>
                 </div>
@@ -93,21 +92,21 @@ export default function SchedulePage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Booking</DialogTitle>
-            <DialogDescription>
+            <DialogHeader>
               You are booking a spot for <strong>{selectedClass?.name}</strong>.
-            </DialogDescription>
+            </DialogHeader>
           </DialogHeader>
           <div className="py-4 space-y-2 text-sm">
             <div className="flex justify-between border-b pb-2">
               <span className="text-muted-foreground">Date</span>
               <span className="font-medium">
-                {selectedClass && format(new Date(selectedClass.schedule), "PPP")}
+                {selectedClass?.schedule && format(new Date(selectedClass.schedule), "PPP")}
               </span>
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="text-muted-foreground">Time</span>
               <span className="font-medium">
-                {selectedClass && format(new Date(selectedClass.schedule), "p")}
+                {selectedClass?.schedule && format(new Date(selectedClass.schedule), "p")}
               </span>
             </div>
             <div className="flex justify-between pt-2">

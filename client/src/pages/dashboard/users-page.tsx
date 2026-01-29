@@ -1,5 +1,4 @@
 import { useUsersList } from "@/hooks/use-dashboard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -11,10 +10,10 @@ export default function UsersPage() {
   const { data: users, isLoading } = useUsersList();
   const [search, setSearch] = useState("");
 
-  const filteredUsers = users?.filter(user => 
-    user.fullName.toLowerCase().includes(search.toLowerCase()) || 
-    user.email?.toLowerCase().includes(search.toLowerCase())
-  ) || [];
+  const filteredUsers = Array.isArray(users) ? users.filter(user => 
+    user?.fullName?.toLowerCase().includes(search.toLowerCase()) || 
+    user?.email?.toLowerCase().includes(search.toLowerCase())
+  ) : [];
 
   return (
     <div className="space-y-8">
@@ -48,23 +47,23 @@ export default function UsersPage() {
               <div className="col-span-3 text-right pr-2">Joined</div>
             </div>
             {filteredUsers.map((user) => (
-              <div key={user.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
+              <div key={user?.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
                 <div className="col-span-4 flex items-center gap-3">
                   <Avatar className="h-9 w-9 border border-slate-200">
                     <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                      {user.fullName.charAt(0)}
+                      {user?.fullName?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="font-medium text-slate-900">{user.fullName}</span>
+                  <span className="font-medium text-slate-900">{user?.fullName || "Unnamed User"}</span>
                 </div>
-                <div className="col-span-3 text-sm text-slate-500 truncate">{user.email || "No email"}</div>
+                <div className="col-span-3 text-sm text-slate-500 truncate">{user?.email || "No email"}</div>
                 <div className="col-span-2">
-                  <Badge variant={user.role === 'owner' ? "destructive" : user.role === 'trainer' ? "secondary" : "outline"} className="capitalize">
-                    {user.role}
+                  <Badge variant={user?.role === 'owner' ? "destructive" : user?.role === 'trainer' ? "secondary" : "outline"} className="capitalize">
+                    {user?.role || "member"}
                   </Badge>
                 </div>
                 <div className="col-span-3 text-right text-sm text-slate-500 pr-2">
-                  {user.createdAt ? format(new Date(user.createdAt), "MMM d, yyyy") : "-"}
+                  {user?.createdAt ? format(new Date(user.createdAt), "MMM d, yyyy") : "-"}
                 </div>
               </div>
             ))}
