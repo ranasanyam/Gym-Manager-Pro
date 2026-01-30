@@ -52,6 +52,11 @@ export const api = {
     list: { method: 'GET' as const, path: '/api/members', responses: { 200: z.array(z.custom<typeof gymMembers.$inferSelect & { user: typeof users.$inferSelect }>()) } },
     create: { method: 'POST' as const, path: '/api/members', input: insertGymMemberSchema, responses: { 201: z.custom<typeof gymMembers.$inferSelect>() } },
   },
+  bookings: {
+    list: { method: 'GET' as const, path: '/api/bookings', responses: { 200: z.array(z.any()) } },
+    create: { method: 'POST' as const, path: '/api/bookings', input: z.any(), responses: { 201: z.any() } },
+    cancel: { method: 'POST' as const, path: '/api/bookings/:id/cancel', responses: { 200: z.any() } },
+  },
   plans: {
     workouts: { 
       list: { method: 'GET' as const, path: '/api/members/:memberId/workouts', responses: { 200: z.array(z.custom<typeof workoutPlans.$inferSelect>()) } },

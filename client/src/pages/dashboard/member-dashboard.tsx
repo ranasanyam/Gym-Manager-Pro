@@ -14,7 +14,7 @@ export default function MemberDashboard() {
   const myBookings = Array.isArray(bookings) ? bookings.filter(b => b?.userId === user?.id && b?.status === "confirmed") : [];
   
   const upcomingBookings = myBookings
-    .filter(b => b?.class && isFuture(new Date(b.class.schedule)))
+    .filter(b => b?.class && b?.class?.schedule && isFuture(new Date(b.class.schedule)))
     .sort((a, b) => new Date(a!.class!.schedule).getTime() - new Date(b!.class!.schedule).getTime());
 
   return (

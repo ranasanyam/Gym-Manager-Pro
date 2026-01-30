@@ -131,7 +131,6 @@ function Router() {
               <ProtectedRoute component={SchedulePage} />
             </Route>
             
-            {/* New routes */}
             <Route path="/dashboard/gyms">
               <ProtectedRoute component={GymsPage} allowedRoles={['owner']} />
             </Route>
@@ -171,7 +170,7 @@ function Router() {
             <Route path="/dashboard/profile">
               <ProtectedRoute component={SettingsPage} />
             </Route>
-
+            
             <Route component={NotFound} />
           </Switch>
         </LayoutShell>
