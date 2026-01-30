@@ -1,0 +1,145 @@
+Go through the existing GymCore web application codebase and fix the current onboarding, routing, and feature gaps without breaking existing login and signup functionality.
+
+CURRENT ISSUES TO FIX:
+
+1. Signup Flow Fix
+- The signup page currently asks for "User Type" using a dropdown.
+- REMOVE user type selection from the signup form.
+- Signup should only collect:
+  - Full Name
+  - Mobile Number
+  - Email (optional)
+  - City
+- On successful signup:
+  - Create the user
+  - Set user role as NULL initially
+  - Redirect the user to a new onboarding step: "Select User Type"
+
+2. Add Select User Type Onboarding Step
+- Create a new page called "Select User Type"
+- Show two options as cards or buttons:
+  - Gym Owner
+  - Member
+- User must select one option to continue
+
+3. Role Assignment & Redirection
+- If user selects "Gym Owner":
+  - Update user role to OWNER
+  - Redirect to a new page called "Create Gym"
+- If user selects "Member":
+  - Update user role to MEMBER
+  - Redirect to Member Home page (Gym Discovery page)
+
+4. Fix Incorrect Dashboard Redirection
+- Currently, both members and gym owners are redirected directly to the same dashboard after signup.
+- Update logic so:
+  - Users with role = OWNER go to Owner Dashboard
+  - Users with role = MEMBER go to Member Home
+  - Users with role = NULL always go to Select User Type page
+
+5. Create Gym Page (MISSING FEATURE)
+- Create a "Create Gym" page for Gym Owners with fields:
+  - Gym Name
+  - Gym Address
+  - City
+  - Contact Number
+  - Upload Gym Images (optional)
+  - Upload GPay QR (optional)
+  - Upload PhonePe QR (optional)
+- After gym creation:
+  - Redirect owner to Owner Dashboard
+- Ensure a gym owner cannot access dashboard without creating at least one gym
+
+6. Sidebar & Navigation Fix
+- Sidebar currently shows:
+  - Overview
+  - Classes
+  - Members
+- Fix this as follows:
+  - Remove or hide menu items for pages that do not exist yet
+  - OR create placeholder pages for them with proper routing
+- Sidebar items must be role-based:
+  Gym Owner:
+    - Overview (Dashboard)
+    - Gyms
+    - Members
+    - Trainers
+    - Attendance
+    - Payments
+    - Workout Plans
+    - Diet Plans
+    - Reports
+    - Settings
+  Member:
+    - Dashboard
+    - Workout
+    - Diet
+    - Attendance
+    - Payments
+    - Profile
+
+7. Dashboard Data Cleanup
+- The dashboard currently shows hardcoded or placeholder values:
+  - Total Members
+  - Active Classes
+  - Monthly Revenue
+- Replace placeholders with:
+  - Safe default values (0, empty states)
+  - Clear empty-state messages if no data exists
+- Remove "Classes" and "Bookings" concepts for now unless implemented
+
+REMAINING FEATURES TO ADD (NEXT IMPLEMENTATION):
+
+8. Member Home (Gym Discovery)
+- Create a Member Home page that:
+  - Shows gyms in the user's city
+  - Displays gym cards with image, name, address
+  - Allows viewing gym details
+
+9. Member & Trainer Management
+- Allow gym owners to:
+  - Add members using mobile number
+  - Add trainers and assign them to gyms
+
+10. Attendance Management
+- Add attendance tracking:
+  - Manual check-in
+  - QR-based check-in (later)
+- Owners can view attendance
+- Members can view their attendance history
+
+11. Payments & Fees
+- Allow gym owners to track payments
+- Allow members to view payment history
+- Support GPay / PhonePe / Cash as payment methods
+
+12. Workout Plans (Weekly)
+- Gym owners and trainers can create workout plans
+- Plans are weekly (Monday to Sunday)
+- Each day supports exercises with sets and reps
+- Members can only view assigned plans
+
+13. Diet Plans (Weekly)
+- Gym owners and trainers can create diet plans
+- Plans are weekly with meals per day
+- Some plans can be free, others paid
+- Members can only view assigned plans
+
+14. Notifications
+- Gym owners can send notifications:
+  - Expiry reminders
+  - Offers
+  - Holidays
+- Members can view notifications
+
+15. Reports
+- Owner reports:
+  - Monthly revenue
+  - Active members
+  - Attendance summary
+
+GENERAL REQUIREMENTS:
+- Do not break existing login/signup functionality
+- Use clean routing and role-based guards
+- Show friendly empty states instead of broken UI
+- Keep the UI clean and consistent with the current design

@@ -125,5 +125,12 @@ export async function registerRoutes(
     });
   });
 
+  app.get("/api/gyms/owner", isAuthenticated, async (req, res) => {
+    const user = req.user as any;
+    if (user.role !== 'owner') return res.json([]);
+    const gyms = await storage.getGymsByOwner(user.id);
+    res.json(gyms);
+  });
+
   return httpServer;
 }

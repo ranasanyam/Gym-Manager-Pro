@@ -9,6 +9,12 @@ import {
   Dumbbell,
   Settings,
   Menu,
+  CreditCard,
+  Bell,
+  FileText,
+  User,
+  Activity,
+  Apple
 } from "lucide-react";
 import {
   Sheet,
@@ -27,18 +33,35 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     switch (user.role) {
       case "owner":
         return [
-          { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-          { href: "/dashboard/classes", label: "Classes", icon: Calendar },
+          { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+          { href: "/dashboard/gyms", label: "Gyms", icon: Dumbbell },
           { href: "/dashboard/users", label: "Members", icon: Users },
+          { href: "/dashboard/trainers", label: "Trainers", icon: User },
+          { href: "/dashboard/attendance", label: "Attendance", icon: Calendar },
+          { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
+          { href: "/dashboard/workouts", label: "Workout Plans", icon: Activity },
+          { href: "/dashboard/diets", label: "Diet Plans", icon: Apple },
+          { href: "/dashboard/reports", label: "Reports", icon: FileText },
+          { href: "/dashboard/settings", label: "Settings", icon: Settings },
         ];
       case "trainer":
         return [
-          { href: "/dashboard", label: "My Schedule", icon: Calendar },
+          { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+          { href: "/dashboard/assigned-members", label: "Assigned Members", icon: Users },
+          { href: "/dashboard/workouts", label: "Workout Plans", icon: Activity },
+          { href: "/dashboard/diets", label: "Diet Plans", icon: Apple },
+          { href: "/dashboard/profile", label: "Profile", icon: User },
         ];
-      default: // member
+      case "member":
+      default:
         return [
-          { href: "/dashboard", label: "My Bookings", icon: LayoutDashboard },
-          { href: "/dashboard/schedule", label: "Class Schedule", icon: Calendar },
+          { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+          { href: "/dashboard/workout", label: "Workout", icon: Activity },
+          { href: "/dashboard/diet", label: "Diet", icon: Apple },
+          { href: "/dashboard/attendance", label: "Attendance", icon: Calendar },
+          { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
+          { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
+          { href: "/dashboard/profile", label: "Profile", icon: User },
         ];
     }
   };

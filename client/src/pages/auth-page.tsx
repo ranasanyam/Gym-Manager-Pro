@@ -166,7 +166,7 @@ function RegisterForm() {
       email: "",
       mobileNumber: "",
       city: "",
-      role: "member" 
+      role: undefined 
     },
   });
 
@@ -276,29 +276,6 @@ function RegisterForm() {
             )}
           />
         </div>
-
-          <FormField
-            control={form.control}
-            name="role"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Role (For Demo)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a role" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="member">Member</SelectItem>
-                    <SelectItem value="trainer">Trainer</SelectItem>
-                    <SelectItem value="owner">Gym Owner</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
         <Button 
           type="submit" 
