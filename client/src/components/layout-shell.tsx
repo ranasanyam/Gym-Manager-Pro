@@ -35,7 +35,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
         return [
           { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
           { href: "/dashboard/gyms", label: "Gyms", icon: Dumbbell },
-          { href: "/dashboard/users", label: "Members", icon: Users },
+          { href: "/dashboard/members", label: "Members", icon: Users },
           { href: "/dashboard/trainers", label: "Trainers", icon: User },
           { href: "/dashboard/attendance", label: "Attendance", icon: Calendar },
           { href: "/dashboard/payments", label: "Payments", icon: CreditCard },

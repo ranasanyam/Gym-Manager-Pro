@@ -1,0 +1,179 @@
+Go through the current GymCore codebase and implement all missing internal pages that are already linked in the sidebar.
+
+The goal is to ensure that every sidebar link opens a real page with basic working functionality or meaningful placeholders, instead of broken or empty routes.
+
+====================================
+1. GYMS PAGE (OWNER)
+====================================
+
+Create a "Gyms" page for Gym Owners.
+
+Features:
+- List all gyms created by the logged-in owner
+- Show gyms in a card or table layout with:
+  - Gym Name
+  - City
+  - Status (Active)
+- Add a button: "Add New Gym"
+- Clicking "Add New Gym" should open the existing Create Gym page
+
+If no gyms exist:
+- Show a friendly empty state message:
+  "No gyms created yet. Add your first gym to get started."
+
+====================================
+2. MEMBERS PAGE (OWNER)
+====================================
+
+Create a "Members" management page.
+
+Features:
+- Show a list/table of members linked to the owner’s gyms
+- Display:
+  - Member Name
+  - Mobile Number
+  - Membership Type
+  - Status (Active / Expired)
+- Add a button: "Add Member"
+
+Add Member functionality:
+- Allow owner to add member using mobile number
+- If user exists, link them as a member
+- If user does not exist, create user and assign MEMBER role
+
+If no members exist:
+- Show empty state message
+
+====================================
+3. TRAINERS PAGE (OWNER)
+====================================
+
+Create a "Trainers" page.
+
+Features:
+- List trainers added by the gym owner
+- Show:
+  - Trainer Name
+  - Assigned Gym
+- Add button: "Add Trainer"
+
+Add Trainer:
+- Create trainer profile
+- Assign trainer to a gym
+
+====================================
+4. ATTENDANCE PAGE (OWNER + MEMBER)
+====================================
+
+Create an "Attendance" page.
+
+For Owners:
+- View attendance records for their gyms
+- Table columns:
+  - Member Name
+  - Date
+  - Check-in Time
+  - Method (Manual / QR)
+
+For Members:
+- View their own attendance history
+
+If no attendance exists:
+- Show empty state
+
+====================================
+5. PAYMENTS PAGE (OWNER + MEMBER)
+====================================
+
+Create a "Payments" page.
+
+For Owners:
+- View all payments for their gyms
+- Show:
+  - Member Name
+  - Amount
+  - Payment Method
+  - Date
+
+For Members:
+- View their own payment history
+
+Use placeholder data if real data is not yet available.
+
+====================================
+6. WORKOUT PLANS PAGE (OWNER / TRAINER / MEMBER)
+====================================
+
+Create a "Workout Plans" page.
+
+For Owners and Trainers:
+- Show list of workout plans
+- Add button: "Create Workout Plan"
+- Workout Plan structure:
+  - Assigned Member
+  - Weekly layout (Monday–Sunday)
+  - Each day contains exercises with sets and reps
+
+For Members:
+- Show assigned workout plan in read-only mode
+
+If no plan exists:
+- Show friendly message
+
+====================================
+7. DIET PLANS PAGE (OWNER / TRAINER / MEMBER)
+====================================
+
+Create a "Diet Plans" page.
+
+For Owners and Trainers:
+- Add and manage diet plans
+- Weekly structure (Monday–Sunday)
+- Each day includes:
+  - Breakfast
+  - Lunch
+  - Snacks
+  - Dinner
+
+For Members:
+- View assigned diet plan in read-only mode
+
+====================================
+8. REPORTS PAGE (OWNER)
+====================================
+
+Create a "Reports" page.
+
+Include:
+- Monthly revenue summary
+- Active members count
+- Attendance summary
+
+Use charts or tables where possible.
+If real data is not available, use placeholders.
+
+====================================
+9. SETTINGS PAGE (OWNER)
+====================================
+
+Create a "Settings" page.
+
+Include:
+- Profile information
+- Logout option
+- Placeholder sections for future settings
+
+====================================
+10. ROUTING & UX REQUIREMENTS
+====================================
+
+- Ensure all sidebar links navigate to valid pages
+- Use role-based access:
+  - Owners see owner pages
+  - Members see member pages
+- Do not break existing authentication or dashboard
+- Use consistent layout and styling
+- Show empty states instead of blank screens
+
+The goal is NOT advanced business logic yet.
+The goal is to make the app feel complete, navigable, and stable.

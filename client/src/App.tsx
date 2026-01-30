@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { LayoutShell } from "@/components/layout-shell";
-import { Loader2 } from "lucide-react";
+import { Loader2, Dumbbell } from "lucide-react";
 
 import AuthPage from "@/pages/auth-page";
 import OnboardingPage from "@/pages/onboarding-page";
@@ -14,6 +14,15 @@ import NotFound from "@/pages/not-found";
 import OwnerDashboard from "@/pages/dashboard/owner-dashboard";
 import ClassesPage from "@/pages/dashboard/classes-page";
 import UsersPage from "@/pages/dashboard/users-page";
+import GymsPage from "@/pages/dashboard/gyms-page";
+import MembersPage from "@/pages/dashboard/members-page";
+import TrainersPage from "@/pages/dashboard/trainers-page";
+import AttendancePage from "@/pages/dashboard/attendance-page";
+import PaymentsPage from "@/pages/dashboard/payments-page";
+import WorkoutsPage from "@/pages/dashboard/workouts-page";
+import DietsPage from "@/pages/dashboard/diets-page";
+import ReportsPage from "@/pages/dashboard/reports-page";
+import SettingsPage from "@/pages/dashboard/settings-page";
 import SchedulePage from "@/pages/dashboard/schedule-page";
 import MemberDashboard from "@/pages/dashboard/member-dashboard";
 
@@ -122,42 +131,45 @@ function Router() {
               <ProtectedRoute component={SchedulePage} />
             </Route>
             
-            {/* Placeholder routes for missing pages */}
+            {/* New routes */}
             <Route path="/dashboard/gyms">
-              <ProtectedRoute component={() => <PlaceholderPage title="Gym Management" />} allowedRoles={['owner']} />
+              <ProtectedRoute component={GymsPage} allowedRoles={['owner']} />
+            </Route>
+            <Route path="/dashboard/members">
+              <ProtectedRoute component={MembersPage} allowedRoles={['owner']} />
             </Route>
             <Route path="/dashboard/trainers">
-              <ProtectedRoute component={() => <PlaceholderPage title="Trainer Management" />} allowedRoles={['owner']} />
+              <ProtectedRoute component={TrainersPage} allowedRoles={['owner']} />
             </Route>
             <Route path="/dashboard/attendance">
-              <ProtectedRoute component={() => <PlaceholderPage title="Attendance Tracking" />} />
+              <ProtectedRoute component={AttendancePage} />
             </Route>
             <Route path="/dashboard/payments">
-              <ProtectedRoute component={() => <PlaceholderPage title="Payment History" />} />
+              <ProtectedRoute component={PaymentsPage} />
             </Route>
             <Route path="/dashboard/workouts">
-              <ProtectedRoute component={() => <PlaceholderPage title="Workout Plans" />} />
+              <ProtectedRoute component={WorkoutsPage} />
             </Route>
             <Route path="/dashboard/diets">
-              <ProtectedRoute component={() => <PlaceholderPage title="Diet Plans" />} />
+              <ProtectedRoute component={DietsPage} />
             </Route>
             <Route path="/dashboard/reports">
-              <ProtectedRoute component={() => <PlaceholderPage title="Analytics Reports" />} allowedRoles={['owner']} />
+              <ProtectedRoute component={ReportsPage} allowedRoles={['owner']} />
             </Route>
             <Route path="/dashboard/settings">
-              <ProtectedRoute component={() => <PlaceholderPage title="Account Settings" />} />
+              <ProtectedRoute component={SettingsPage} />
             </Route>
             <Route path="/dashboard/workout">
-              <ProtectedRoute component={() => <PlaceholderPage title="My Workout Plan" />} allowedRoles={['member']} />
+              <ProtectedRoute component={WorkoutsPage} allowedRoles={['member']} />
             </Route>
             <Route path="/dashboard/diet">
-              <ProtectedRoute component={() => <PlaceholderPage title="My Diet Plan" />} allowedRoles={['member']} />
+              <ProtectedRoute component={DietsPage} allowedRoles={['member']} />
             </Route>
             <Route path="/dashboard/notifications">
               <ProtectedRoute component={() => <PlaceholderPage title="Notifications" />} />
             </Route>
             <Route path="/dashboard/profile">
-              <ProtectedRoute component={() => <PlaceholderPage title="My Profile" />} />
+              <ProtectedRoute component={SettingsPage} />
             </Route>
 
             <Route component={NotFound} />
