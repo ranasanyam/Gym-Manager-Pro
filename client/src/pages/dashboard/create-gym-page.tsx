@@ -23,6 +23,43 @@ const steps = [
   { id: "media", title: "Media & Payments" },
 ];
 
+import { Checkbox } from "@/components/ui/checkbox";
+
+const facilityOptions = [
+  { id: "ac", label: "AC" },
+  { id: "cardio", label: "Cardio" },
+  { id: "cctv", label: "CCTV" },
+  { id: "fire_protection", label: "Fire Protection" },
+  { id: "hot_water", label: "Hot Water" },
+  { id: "locker", label: "Locker" },
+  { id: "parking", label: "Parking" },
+  { id: "security", label: "Security" },
+  { id: "shower", label: "Shower" },
+  { id: "speakers", label: "Speakers" },
+  { id: "trainers", label: "Trainers" },
+  { id: "weight", label: "Weight" },
+  { id: "wifi", label: "WiFi" },
+  { id: "workout", label: "Workout" },
+];
+
+const serviceOptions = [
+  { id: "abs", label: "Abs" },
+  { id: "aerobics", label: "Aerobics" },
+  { id: "body_tone", label: "Body Tone" },
+  { id: "combat", label: "Combat" },
+  { id: "core_gym", label: "Core Gym" },
+  { id: "dance", label: "Dance" },
+  { id: "high_intensity", label: "High Intensity" },
+  { id: "pilates", label: "Pilates" },
+  { id: "sports", label: "Sports" },
+  { id: "swimming", label: "Swimming" },
+  { id: "weight_training", label: "Weight Training" },
+  { id: "yoga", label: "Yoga" },
+  { id: "female_trainer", label: "Female Trainer" },
+  { id: "dietitian", label: "Dietitian" },
+  { id: "supplement", label: "Supplement" },
+];
+
 export default function CreateGymPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
@@ -54,11 +91,6 @@ export default function CreateGymPage() {
       gpayQr: "",
       phonepeQr: "",
     },
-  });
-
-  const { fields: serviceFields, append: appendService, remove: removeService } = useFieldArray({
-    control: form.control,
-    name: "services",
   });
 
   const { fields: planFields, append: appendPlan, remove: removePlan } = useFieldArray({
@@ -172,59 +204,99 @@ export default function CreateGymPage() {
               )}
 
               {currentStep === 1 && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
-                  <Label>Facilities</Label>
-                  <p className="text-sm text-muted-foreground">List the facilities available at your gym (e.g., Shower, Parking, Locker).</p>
-                  <FormField control={form.control} name="facilities" render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Enter facilities separated by commas..." 
-                          className="min-h-[100px]"
-                          value={field.value?.join(", ")}
-                          onChange={(e) => field.onChange(e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+                  <div>
+                    <Label className="text-xl font-bold">Facilities</Label>
+                    <p className="text-sm text-muted-foreground mb-6">Select the facilities available at your gym.</p>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    {facilityOptions.map((option) => (
+                      <FormField
+                        key={option.id}
+                        control={form.control}
+                        name="facilities"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-4 border rounded-lg hover:bg-slate-50 transition-colors">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value?.includes(option.id)}
+                                onCheckedChange={(checked) => {
+                                  return checked
+                                    ? field.onChange([...(field.value || []), option.id])
+                                    : field.onChange(field.value?.filter((value: string) => value !== option.id));
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-medium cursor-pointer flex-1">
+                              {option.label}
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
 
               {currentStep === 2 && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
-                  <div className="flex justify-between items-center">
-                    <Label>Services</Label>
-                    <Button type="button" variant="outline" size="sm" onClick={() => appendService({ name: "", price: "", description: "" })}>
-                      <Plus className="w-4 h-4 mr-2" /> Add Service
-                    </Button>
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+                  <div>
+                    <Label className="text-xl font-bold">Services</Label>
+                    <p className="text-sm text-muted-foreground mb-6">Select the services offered at your gym.</p>
                   </div>
-                  {serviceFields.map((field, index) => (
-                    <Card key={field.id} className="p-4 border-dashed">
-                      <div className="space-y-4">
-                        <div className="flex gap-4">
-                          <FormField control={form.control} name={`services.${index}.name`} render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormControl><Input placeholder="Service Name (e.g. Personal Training)" {...field} /></FormControl>
-                            </FormItem>
-                          )} />
-                          <FormField control={form.control} name={`services.${index}.price`} render={({ field }) => (
-                            <FormItem className="w-32">
-                              <FormControl><Input type="number" placeholder="Price" {...field} /></FormControl>
-                            </FormItem>
-                          )} />
-                          <Button type="button" variant="ghost" size="icon" onClick={() => removeService(index)}>
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                        <FormField control={form.control} name={`services.${index}.description`} render={({ field }) => (
-                          <FormItem>
-                            <FormControl><Input placeholder="Brief description" {...field} /></FormControl>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    {serviceOptions.map((option) => (
+                      <FormField
+                        key={option.id}
+                        control={form.control}
+                        name="services"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-4 border rounded-lg hover:bg-slate-50 transition-colors">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value?.some((s: any) => s.id === option.id)}
+                                onCheckedChange={(checked) => {
+                                  const currentServices = field.value || [];
+                                  return checked
+                                    ? field.onChange([...currentServices, { id: option.id, name: option.label, price: "0" }])
+                                    : field.onChange(currentServices.filter((s: any) => s.id !== option.id));
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-medium cursor-pointer flex-1">
+                              {option.label}
+                            </FormLabel>
                           </FormItem>
-                        )} />
-                      </div>
-                    </Card>
-                  ))}
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <div className="space-y-4 mt-8">
+                    <Label className="text-lg font-bold">Configure Pricing</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {form.watch("services")?.map((service: any, index: number) => (
+                        <Card key={service.id} className="p-4 bg-slate-50/50">
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="font-medium">{service.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold">₹</span>
+                              <Input
+                                type="number"
+                                className="w-24 bg-white"
+                                placeholder="0"
+                                value={service.price}
+                                onChange={(e) => {
+                                  const services = [...form.getValues("services")];
+                                  services[index].price = e.target.value;
+                                  form.setValue("services", services);
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 

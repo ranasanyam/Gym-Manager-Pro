@@ -45,9 +45,15 @@ const formSchema = z.object({
 });
 
 export default function AddMemberPage() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const searchParams = new URLSearchParams(location.split('?')[1]);
+  const defaultGymId = searchParams.get('gymId');
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: ownerGyms } = useQuery<any[]>({
+    queryKey: ['/api/gyms/owner'],
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,34 +65,13 @@ export default function AddMemberPage() {
       gender: "male",
       goals: [],
       dob: "",
-      address: "",      city: "",      membershipPlan: "monthly",
+      address: "",
+      city: "",
+      membershipPlan: "monthly",
       startDate: formatISO(new Date(), { representation: "date" }),
       endDate: formatISO(addDays(new Date(), 30), { representation: "date" }),
     },
   });
-
-  const membershipPlan = form.watch("membershipPlan");
-  const startDate = form.watch("startDate");
-
-  // compute end date when plan or start date changes
-  const computedEndDate = useMemo(() => {
-    const plan = membershipPlans.find((p) => p.id === membershipPlan);
-    if (!plan) return startDate;
-    const days = plan.durationDays || 0;
-    const sd = new Date(startDate);
-    return formatISO(addDays(sd, days), { representation: "date" });
-  }, [membershipPlan, startDate]);
-
-  // keep endDate in sync with computed
-  if (form.getValues("endDate") !== computedEndDate) {
-    form.setValue("endDate", computedEndDate);
-  }
-
-  // sync membership type to selected plan
-  const currentPlan = membershipPlans.find((p) => p.id === membershipPlan);
-  if (currentPlan && form.getValues("memberType") !== currentPlan.membershipType) {
-    form.setValue("memberType", currentPlan.membershipType as any);
-  }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -103,7 +88,12 @@ export default function AddMemberPage() {
         goals: values.goals,
         startDate: values.startDate,
         endDate: values.endDate,
+        gymId: defaultGymId ? Number(defaultGymId) : (ownerGyms?.[0]?.id),
       } as any;
+
+      if (!payload.gymId) {
+        throw new Error("No gym selected or available.");
+      }
 
       const res = await fetch('/api/members', {
         method: 'POST',
@@ -112,57 +102,48 @@ export default function AddMemberPage() {
       });
 
       if (!res.ok) {
-        const ct = res.headers.get('content-type') || '';
-        let body = await res.text().catch(() => '');
-        try {
-          if (ct.includes('application/json')) {
-            const json = JSON.parse(body);
-            body = json?.message || body;
-          }
-        } catch (e) {
-          // ignore
-        }
-        throw new Error(body || 'Failed to add member');
+        const body = await res.json();
+        throw new Error(body?.message || 'Failed to add member');
       }
 
       toast({ title: 'Member added successfully' });
       setLocation('/members');
     } catch (err: any) {
-      toast({ title: 'Failed to add member', description: err.message || String(err) });
+      toast({ title: 'Failed to add member', description: err.message || String(err), variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-12">
-      <Card>
+    <div className="container mx-auto py-8 px-4">
+      <Card className="max-w-3xl mx-auto shadow-lg border-none">
         <CardHeader>
-          <CardTitle className="text-2xl">Add Member</CardTitle>
-          <CardDescription>Fill out member details and create a membership.</CardDescription>
+          <CardTitle className="text-2xl font-display font-bold">Add New Member</CardTitle>
+          <CardDescription>Register a new member to the gym.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="memberType"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Member Type</FormLabel>
-                      <FormControl>
-                        <Select onValueChange={(v) => field.onChange(v)} value={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
                           <SelectTrigger>
-                            <SelectValue />
+                            <SelectValue placeholder="Select type" />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="FREE">Free</SelectItem>
-                            <SelectItem value="PAID">Paid</SelectItem>
-                            <SelectItem value="PERSONAL">Personal</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="FREE">Free</SelectItem>
+                          <SelectItem value="PAID">Paid</SelectItem>
+                          <SelectItem value="PERSONAL">Personal</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -174,25 +155,25 @@ export default function AddMemberPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Membership Plan</FormLabel>
-                      <FormControl>
-                        <Select onValueChange={(v) => field.onChange(v)} value={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
                           <SelectTrigger>
-                            <SelectValue />
+                            <SelectValue placeholder="Select plan" />
                           </SelectTrigger>
-                          <SelectContent>
-                            {membershipPlans.map((p) => (
-                              <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
+                        </FormControl>
+                        <SelectContent>
+                          {membershipPlans.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="name"
@@ -200,7 +181,7 @@ export default function AddMemberPage() {
                     <FormItem>
                       <FormLabel>Full Name</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input placeholder="John Doe" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -214,7 +195,7 @@ export default function AddMemberPage() {
                     <FormItem>
                       <FormLabel>Mobile Number</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input placeholder="1234567890" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -222,15 +203,15 @@ export default function AddMemberPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Email (Optional)</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input placeholder="john@example.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -243,25 +224,25 @@ export default function AddMemberPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Gender</FormLabel>
-                      <FormControl>
-                        <Select onValueChange={(v) => field.onChange(v)} value={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
                           <SelectTrigger>
-                            <SelectValue />
+                            <SelectValue placeholder="Select gender" />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="dob"
@@ -281,33 +262,30 @@ export default function AddMemberPage() {
                   name="goals"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Goals</FormLabel>
+                      <FormLabel>Fitness Goals</FormLabel>
                       <FormControl>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="w-full justify-between">
-                              { (form.watch("goals") || []).length > 0
-                                ? (form.watch("goals") || []).map((g: string) => goalsOptions.find(o => o.value === g)?.label).filter(Boolean).join(', ')
-                                : 'Select goals'
-                              }
+                              {(field.value || []).length > 0
+                                ? (field.value || []).map(g => goalsOptions.find(o => o.value === g)?.label).join(', ')
+                                : "Select goals"}
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent className="min-w-[18rem]">
-                            <DropdownMenuLabel>Goals</DropdownMenuLabel>
-                            {goalsOptions.map((g) => (
+                          <DropdownMenuContent className="w-56">
+                            {goalsOptions.map(option => (
                               <DropdownMenuCheckboxItem
-                                key={g.value}
-                                checked={(form.watch("goals") || []).includes(g.value)}
-                                onCheckedChange={(checked: boolean) => {
-                                  const current = form.getValues("goals") || [];
-                                  if (checked) {
-                                    form.setValue("goals", [...current, g.value]);
-                                  } else {
-                                    form.setValue("goals", current.filter((c) => c !== g.value));
-                                  }
+                                key={option.id}
+                                checked={field.value?.includes(option.value)}
+                                onCheckedChange={(checked) => {
+                                  const current = field.value || [];
+                                  field.onChange(checked 
+                                    ? [...current, option.value]
+                                    : current.filter(v => v !== option.value)
+                                  );
                                 }}
                               >
-                                {g.label}
+                                {option.label}
                               </DropdownMenuCheckboxItem>
                             ))}
                           </DropdownMenuContent>
@@ -319,46 +297,27 @@ export default function AddMemberPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Current residential address" className="min-h-[80px]" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <div className="col-span-2">
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="startDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Start Date</FormLabel>
+                      <FormLabel>Membership Start Date</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
                       </FormControl>
@@ -372,7 +331,7 @@ export default function AddMemberPage() {
                   name="endDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>End Date</FormLabel>
+                      <FormLabel>Membership End Date</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} disabled />
                       </FormControl>
@@ -382,9 +341,12 @@ export default function AddMemberPage() {
                 />
               </div>
 
-              <div className="flex justify-end">
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Saving...' : 'Add Member'}
+              <div className="flex gap-4 pt-4">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setLocation('/members')}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                  {isSubmitting ? "Registering..." : "Register Member"}
                 </Button>
               </div>
             </form>

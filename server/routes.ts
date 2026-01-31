@@ -90,6 +90,13 @@ export async function registerRoutes(
     res.json(req.user);
   });
 
+  app.get('/api/user/member', isAuthenticated, async (req, res) => {
+    const user = req.user as any;
+    const member = await storage.getMemberByUserId(user.id);
+    if (!member) return res.status(404).json({ message: 'Member record not found' });
+    res.json(member);
+  });
+
   app.patch(api.auth.updateRole.path, isAuthenticated, async (req, res) => {
     const user = req.user as any;
     const updatedUser = await storage.updateUserRole(user.id, req.body.role);
@@ -334,23 +341,47 @@ export async function registerRoutes(
 
   // Plans
   app.get(api.plans.workouts.list.path, isAuthenticated, async (req, res) => {
-    const plans = await storage.getWorkoutPlansByMember(Number(req.params.memberId));
-    res.json(plans);
+    try {
+      const memberId = Number(req.params.memberId);
+      const plans = await storage.getWorkoutPlansByMember(memberId);
+      res.json(plans);
+    } catch (err) {
+      console.error('Failed to fetch workout plans', err);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
   });
 
   app.post(api.plans.workouts.create.path, isAuthenticated, async (req, res) => {
-    const plan = await storage.createWorkoutPlan(req.body);
-    res.status(201).json(plan);
+    try {
+      const user = req.user as any;
+      const plan = await storage.createWorkoutPlan({ ...req.body, createdBy: user.id });
+      res.status(201).json(plan);
+    } catch (err) {
+      console.error('Failed to create workout plan', err);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
   });
 
   app.get(api.plans.diets.list.path, isAuthenticated, async (req, res) => {
-    const plans = await storage.getDietPlansByMember(Number(req.params.memberId));
-    res.json(plans);
+    try {
+      const memberId = Number(req.params.memberId);
+      const plans = await storage.getDietPlansByMember(memberId);
+      res.json(plans);
+    } catch (err) {
+      console.error('Failed to fetch diet plans', err);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
   });
 
   app.post(api.plans.diets.create.path, isAuthenticated, async (req, res) => {
-    const plan = await storage.createDietPlan(req.body);
-    res.status(201).json(plan);
+    try {
+      const user = req.user as any;
+      const plan = await storage.createDietPlan({ ...req.body, createdBy: user.id });
+      res.status(201).json(plan);
+    } catch (err) {
+      console.error('Failed to create diet plan', err);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
   });
 
   return httpServer;

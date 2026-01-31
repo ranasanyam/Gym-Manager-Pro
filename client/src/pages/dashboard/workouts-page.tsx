@@ -1,16 +1,28 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Activity, ClipboardList } from "lucide-react";
+import { Plus, Activity, Loader2 } from "lucide-react";
+import { api, buildUrl } from "@shared/routes";
+import { queryClient } from "@/lib/queryClient";
 
 export default function WorkoutsPage() {
   const { user } = useAuth();
   const canCreate = user?.role === 'owner' || user?.role === 'trainer';
 
+  const { data: member } = useQuery({
+    queryKey: ['/api/member/me'],
+    queryFn: async () => {
+      const res = await fetch('/api/user/member');
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: user?.role === 'member'
+  });
+
   const { data: plans, isLoading } = useQuery({
-    queryKey: ['/api/workouts'],
-    queryFn: async () => []
+    queryKey: member ? [buildUrl(api.plans.workouts.list.path, { memberId: member.id })] : ['/api/workouts'],
+    enabled: !!member || user?.role !== 'member',
   });
 
   const weekDays = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];

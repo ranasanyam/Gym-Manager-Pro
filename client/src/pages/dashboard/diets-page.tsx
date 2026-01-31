@@ -2,15 +2,26 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Apple, Coffee } from "lucide-react";
+import { Plus, Apple, Utensils } from "lucide-react";
+import { api, buildUrl } from "@shared/routes";
 
 export default function DietsPage() {
   const { user } = useAuth();
   const canCreate = user?.role === 'owner' || user?.role === 'trainer';
 
+  const { data: member } = useQuery({
+    queryKey: ['/api/member/me'],
+    queryFn: async () => {
+      const res = await fetch('/api/user/member');
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: user?.role === 'member'
+  });
+
   const { data: plans, isLoading } = useQuery({
-    queryKey: ['/api/diets'],
-    queryFn: async () => []
+    queryKey: member ? [buildUrl(api.plans.diets.list.path, { memberId: member.id })] : ['/api/diets'],
+    enabled: !!member || user?.role !== 'member',
   });
 
   const weekDays = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];

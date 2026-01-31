@@ -142,6 +142,7 @@ export const insertUserSchema = createInsertSchema(users).omit({ id: true, creat
 export const insertGymSchema = createInsertSchema(gyms).omit({ id: true }).extend({
   facilities: z.array(z.string()).optional(),
   services: z.array(z.object({
+    id: z.string().optional(),
     name: z.string(),
     price: z.string(),
     description: z.string().optional()
