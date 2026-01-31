@@ -12,7 +12,7 @@ import { format } from "date-fns";
 export default function MemberDetailsPage() {
   const { id } = useParams<{ id: string }>();
 
-  const { data: member, isLoading } = useQuery({
+  const { data: member, isLoading } = useQuery<any>({
     queryKey: [buildUrl(api.members.list.path + "/:id", { id: id! })],
   });
 

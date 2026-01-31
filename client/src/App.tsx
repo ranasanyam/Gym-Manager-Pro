@@ -27,6 +27,8 @@ import SettingsPage from "@/pages/dashboard/settings-page";
 import SchedulePage from "@/pages/dashboard/schedule-page";
 import MemberDashboard from "@/pages/dashboard/member-dashboard";
 import AddMemberPage from "@/pages/dashboard/add-member-page";
+import MemberDetailsPage from "@/pages/dashboard/member-details-page";
+import ProfilePage from "@/pages/dashboard/profile-page";
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
@@ -82,8 +84,6 @@ function ProtectedRoute({
   const [location] = useLocation();
   const currentPath = location;
 
-  // Owner must create a gym first - only redirect when they're visiting the dashboard home
-  // and the gyms query succeeded and returned empty
   if (
     user.role === 'owner' &&
     !isGymLoading &&
@@ -92,7 +92,6 @@ function ProtectedRoute({
     currentPath !== '/gyms/create' &&
     (currentPath === '/dashboard' || currentPath === '/')
   ) {
-    // dev log removed
     return <Redirect to="/gyms/create" />;
   }
 
@@ -122,8 +121,6 @@ function DashboardHome() {
 }
 
 function DashboardRoutes() {
-  const [location] = useLocation();
-
   return (
     <LayoutShell>
       <Switch>
@@ -134,11 +131,9 @@ function DashboardRoutes() {
         <Route path="/dashboard/users">
           <ProtectedRoute component={UsersPage} allowedRoles={['owner']} />
         </Route>
-
         <Route path="/dashboard/schedule">
           <ProtectedRoute component={SchedulePage} />
         </Route>
-        
         <Route path="/dashboard/gyms">
           <ProtectedRoute component={GymsPage} allowedRoles={['owner']} />
         </Route>
@@ -166,19 +161,9 @@ function DashboardRoutes() {
         <Route path="/dashboard/settings">
           <ProtectedRoute component={SettingsPage} />
         </Route>
-        <Route path="/dashboard/workout">
-          <ProtectedRoute component={WorkoutsPage} allowedRoles={['member']} />
-        </Route>
-        <Route path="/dashboard/diet">
-          <ProtectedRoute component={DietsPage} allowedRoles={['member']} />
-        </Route>
-        <Route path="/dashboard/notifications">
-          <ProtectedRoute component={() => <PlaceholderPage title="Notifications" />} />
-        </Route>
         <Route path="/dashboard/profile">
-          <ProtectedRoute component={SettingsPage} />
+          <ProtectedRoute component={ProfilePage} />
         </Route>
-        
         <Route component={NotFound} />
       </Switch>
     </LayoutShell>
@@ -186,20 +171,13 @@ function DashboardRoutes() {
 }
 
 function Router() {
-  const [location] = useLocation();
-
-  // router location is tracked by Wouter's hooks when needed in future
-
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
       <Route path="/onboarding" component={OnboardingPage} />
-      
       <Route path="/">
         {() => <Redirect to="/dashboard" />}
       </Route>
-
-      {/* Top-level routes for primary pages (rendered inside the LayoutShell) */}
 
       <Route path="/gyms">
         <LayoutShell>
@@ -225,9 +203,15 @@ function Router() {
         </LayoutShell>
       </Route>
 
-      <Route path="/members/create">
+      <Route path="/members/add">
         <LayoutShell>
           <ProtectedRoute component={AddMemberPage} allowedRoles={["owner"]} />
+        </LayoutShell>
+      </Route>
+
+      <Route path="/members/:id">
+        <LayoutShell>
+          <ProtectedRoute component={MemberDetailsPage} allowedRoles={["owner"]} />
         </LayoutShell>
       </Route>
 
@@ -279,33 +263,13 @@ function Router() {
         </LayoutShell>
       </Route>
 
-      <Route path="/workout">
-        <LayoutShell>
-          <ProtectedRoute component={WorkoutsPage} allowedRoles={["member"]} />
-        </LayoutShell>
-      </Route>
-
-      <Route path="/diet">
-        <LayoutShell>
-          <ProtectedRoute component={DietsPage} allowedRoles={["member"]} />
-        </LayoutShell>
-      </Route>
-
-      <Route path="/notifications">
-        <LayoutShell>
-          <ProtectedRoute component={() => <PlaceholderPage title="Notifications" />} />
-        </LayoutShell>
-      </Route>
-
       <Route path="/profile">
         <LayoutShell>
-          <ProtectedRoute component={SettingsPage} />
+          <ProtectedRoute component={ProfilePage} />
         </LayoutShell>
       </Route>
 
-      {/* Keep dashboard routes for the dashboard home */}
       <Route path="/dashboard" component={DashboardRoutes} />
-
       <Route component={NotFound} />
     </Switch>
   );
