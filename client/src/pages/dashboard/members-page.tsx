@@ -6,8 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Users, Search, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { useForm } from "react-hook-form";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
 export default function MembersPage() {
@@ -21,7 +20,7 @@ export default function MembersPage() {
   });
 
   const [search, setSearch] = useState("");
-  const [open, setOpen] = useState(false);
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -64,25 +63,11 @@ export default function MembersPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <UserPlus className="h-4 w-4" /> Add Member
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Member</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <p className="text-sm text-muted-foreground">Enter member mobile number to link or create a new account.</p>
-                <Input placeholder="Mobile Number" />
-                <DialogFooter>
-                  <Button onClick={() => addMemberMutation.mutate({ mobileNumber: '123' })}>Add Member</Button>
-                </DialogFooter>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <div>
+            <Button className="gap-2" onClick={() => setLocation('/members/create')}>
+              <UserPlus className="h-4 w-4" /> Add Member
+            </Button>
+          </div>
         </div>
       </div>
 

@@ -36,7 +36,7 @@ export default function MemberDashboard() {
             <h3 className="text-2xl font-bold font-display mb-1">Premium Access</h3>
             <p className="text-slate-400 text-sm">Valid until Dec 31, 2024</p>
           </div>
-          <Link href="/dashboard/schedule">
+          <Link href="/schedule">
             <Button className="bg-white text-slate-900 hover:bg-slate-100 font-semibold shadow-lg">
               Book a Class
             </Button>
@@ -55,7 +55,7 @@ export default function MemberDashboard() {
               <Calendar className="h-10 w-10 text-slate-300 mb-3" />
               <p className="text-slate-900 font-medium">No upcoming bookings</p>
               <p className="text-slate-500 text-sm mb-4">You haven't booked any classes yet.</p>
-              <Link href="/dashboard/schedule">
+              <Link href="/schedule">
                 <Button variant="outline">Browse Schedule</Button>
               </Link>
             </CardContent>

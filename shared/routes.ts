@@ -47,6 +47,7 @@ export const api = {
     list: { method: 'GET' as const, path: '/api/gyms', responses: { 200: z.array(z.custom<typeof gyms.$inferSelect>()) } },
     create: { method: 'POST' as const, path: '/api/gyms', input: insertGymSchema, responses: { 201: z.custom<typeof gyms.$inferSelect>() } },
     get: { method: 'GET' as const, path: '/api/gyms/:id', responses: { 200: z.custom<typeof gyms.$inferSelect>(), 404: errorSchemas.notFound } },
+    members: { method: 'GET' as const, path: '/api/gyms/:id/members', responses: { 200: z.array(z.custom<typeof gymMembers.$inferSelect & { user: typeof users.$inferSelect }>()) } },
   },
   members: {
     list: { method: 'GET' as const, path: '/api/members', responses: { 200: z.array(z.custom<typeof gymMembers.$inferSelect & { user: typeof users.$inferSelect }>()) } },
@@ -69,6 +70,10 @@ export const api = {
   },
   stats: {
     owner: { method: 'GET' as const, path: '/api/stats/owner', responses: { 200: z.object({ totalRevenue: z.number(), activeMembers: z.number() }) } },
+  },
+
+  uploads: {
+    upload: { method: 'POST' as const, path: '/api/uploads', responses: { 200: z.object({ urls: z.array(z.string()) }) } }
   }
 };
 

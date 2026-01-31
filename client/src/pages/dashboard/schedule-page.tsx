@@ -92,9 +92,9 @@ export default function SchedulePage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Booking</DialogTitle>
-            <DialogHeader>
+            <DialogDescription>
               You are booking a spot for <strong>{selectedClass?.name}</strong>.
-            </DialogHeader>
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-2 text-sm">
             <div className="flex justify-between border-b pb-2">

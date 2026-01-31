@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +26,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
   const { user, logoutMutation } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
   if (!user) return <>{children}</>;
 
@@ -34,34 +35,34 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       case "owner":
         return [
           { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-          { href: "/dashboard/gyms", label: "Gyms", icon: Dumbbell },
-          { href: "/dashboard/members", label: "Members", icon: Users },
-          { href: "/dashboard/trainers", label: "Trainers", icon: User },
-          { href: "/dashboard/attendance", label: "Attendance", icon: Calendar },
-          { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
-          { href: "/dashboard/workouts", label: "Workout Plans", icon: Activity },
-          { href: "/dashboard/diets", label: "Diet Plans", icon: Apple },
-          { href: "/dashboard/reports", label: "Reports", icon: FileText },
-          { href: "/dashboard/settings", label: "Settings", icon: Settings },
+          { href: "/gyms", label: "Gyms", icon: Dumbbell },
+          { href: "/members", label: "Members", icon: Users },
+          { href: "/trainers", label: "Trainers", icon: User },
+          { href: "/attendance", label: "Attendance", icon: Calendar },
+          { href: "/payments", label: "Payments", icon: CreditCard },
+          { href: "/workouts", label: "Workout Plans", icon: Activity },
+          { href: "/diets", label: "Diet Plans", icon: Apple },
+          { href: "/reports", label: "Reports", icon: FileText },
+          { href: "/settings", label: "Settings", icon: Settings },
         ];
       case "trainer":
         return [
           { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-          { href: "/dashboard/assigned-members", label: "Assigned Members", icon: Users },
-          { href: "/dashboard/workouts", label: "Workout Plans", icon: Activity },
-          { href: "/dashboard/diets", label: "Diet Plans", icon: Apple },
-          { href: "/dashboard/profile", label: "Profile", icon: User },
+          { href: "/assigned-members", label: "Assigned Members", icon: Users },
+          { href: "/workouts", label: "Workout Plans", icon: Activity },
+          { href: "/diets", label: "Diet Plans", icon: Apple },
+          { href: "/profile", label: "Profile", icon: User },
         ];
       case "member":
       default:
         return [
           { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-          { href: "/dashboard/workout", label: "Workout", icon: Activity },
-          { href: "/dashboard/diet", label: "Diet", icon: Apple },
-          { href: "/dashboard/attendance", label: "Attendance", icon: Calendar },
-          { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
-          { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
-          { href: "/dashboard/profile", label: "Profile", icon: User },
+          { href: "/workout", label: "Workout", icon: Activity },
+          { href: "/diet", label: "Diet", icon: Apple },
+          { href: "/attendance", label: "Attendance", icon: Calendar },
+          { href: "/payments", label: "Payments", icon: CreditCard },
+          { href: "/notifications", label: "Notifications", icon: Bell },
+          { href: "/profile", label: "Profile", icon: User },
         ];
     }
   };
@@ -81,18 +82,25 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
         {navItems.map((item) => {
           const isActive = location === item.href;
           return (
-            <Link key={item.href} href={item.href}>
-              <div
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer ${
-                  isActive
-                    ? "bg-primary text-white shadow-lg shadow-primary/25"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
-                }`}
-              >
-                <item.icon className="h-5 w-5" />
-                <span className="font-medium">{item.label}</span>
-              </div>
-            </Link>
+            <div
+              key={item.href}
+              role="link"
+              tabIndex={0}
+              onClick={() => setLocation(item.href)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  setLocation(item.href);
+                }
+              }}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer ${
+                isActive
+                  ? "bg-primary text-white shadow-lg shadow-primary/25"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800"
+              }`}
+            >
+              <item.icon className="h-5 w-5" />
+              <span className="font-medium">{item.label}</span>
+            </div>
           );
         })}
       </div>

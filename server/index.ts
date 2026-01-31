@@ -1,7 +1,10 @@
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import path from "path";
+import fs from "fs";
 
 const app = express();
 const httpServer = createServer(app);
@@ -21,6 +24,12 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+
+// Serve uploaded images (if present) so uploaded files are accessible at /uploads/<filename>
+const uploadsPath = path.resolve(__dirname, "public", "uploads");
+if (fs.existsSync(uploadsPath)) {
+  app.use('/uploads', express.static(uploadsPath));
+}
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -94,7 +103,7 @@ app.use((req, res, next) => {
     {
       port,
       host: "0.0.0.0",
-      reusePort: true,
+      reusePort: process.platform === "win32" ? false : true,
     },
     () => {
       log(`serving on port ${port}`);

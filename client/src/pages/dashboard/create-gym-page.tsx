@@ -10,11 +10,22 @@ import { useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import React, { useState, useEffect } from "react";
 
 export default function CreateGymPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    const urls = selectedFiles.map(f => URL.createObjectURL(f));
+    setPreviews(urls);
+    return () => urls.forEach(u => URL.revokeObjectURL(u));
+  }, [selectedFiles]);
 
   const form = useForm({
     resolver: zodResolver(insertGymSchema),
@@ -24,6 +35,7 @@ export default function CreateGymPage() {
       city: user?.city || "",
       contactNumber: user?.mobileNumber || "",
       ownerId: user?.id,
+      gymImages: [],
     },
   });
 
@@ -39,9 +51,35 @@ export default function CreateGymPage() {
     },
     onSuccess: () => {
       toast({ title: "Gym created successfully!" });
-      setLocation("/dashboard");
+      setLocation("/gyms");
     },
   });
+
+  async function uploadImages(files: File[]) {
+    if (!files || files.length === 0) return [];
+    const fd = new FormData();
+    files.forEach((f) => fd.append("images", f));
+    const res = await fetch('/api/uploads', { method: 'POST', body: fd, credentials: 'include' });
+    if (!res.ok) throw new Error('Image upload failed');
+    const body = await res.json();
+    return body.urls || [];
+  }
+
+  async function onSubmit(values: any) {
+    try {
+      setIsUploading(true);
+      let urls: string[] = [];
+      if (selectedFiles.length > 0) {
+        urls = await uploadImages(selectedFiles);
+      }
+      const payload = { ...values, gymImages: urls };
+      createGymMutation.mutate(payload);
+    } catch (err: any) {
+      toast({ title: 'Failed to upload images', description: err.message || String(err) });
+    } finally {
+      setIsUploading(false);
+    }
+  }
 
   return (
     <div className="max-w-2xl mx-auto py-12">
@@ -52,7 +90,7 @@ export default function CreateGymPage() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit((data) => createGymMutation.mutate(data))} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="name"
@@ -64,6 +102,7 @@ export default function CreateGymPage() {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="address"
@@ -75,6 +114,7 @@ export default function CreateGymPage() {
                   </FormItem>
                 )}
               />
+
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -100,6 +140,24 @@ export default function CreateGymPage() {
                 />
               </div>
 
+              <div>
+                <Label>Gym Images (optional)</Label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="mt-2"
+                  onChange={(e) => setSelectedFiles(Array.from(e.target.files || []))}
+                />
+                <div className="flex gap-3 mt-3">
+                  {previews.map((p, idx) => (
+                    <div key={p} className="w-24 h-24 rounded overflow-hidden border">
+                      <img src={p} className="w-full h-full object-cover" alt={`preview-${idx}`} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-4">
                 <Label>Payment QR Codes (Optional)</Label>
                 <div className="grid grid-cols-2 gap-4">
@@ -112,8 +170,8 @@ export default function CreateGymPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-11" disabled={createGymMutation.isPending}>
-                {createGymMutation.isPending ? "Saving..." : "Create Gym"}
+              <Button type="submit" className="w-full h-11" disabled={createGymMutation.isPending || isUploading}>
+                {createGymMutation.isPending || isUploading ? "Saving..." : "Create Gym"}
               </Button>
             </form>
           </Form>

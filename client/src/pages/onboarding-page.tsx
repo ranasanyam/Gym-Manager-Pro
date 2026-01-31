@@ -24,7 +24,7 @@ export default function OnboardingPage() {
     onSuccess: (updatedUser) => {
       queryClient.setQueryData([api.auth.me.path], updatedUser);
       if (updatedUser.role === "owner") {
-        setLocation("/dashboard/gyms/create");
+        setLocation("/gyms/create");
       } else {
         setLocation("/dashboard");
       }
