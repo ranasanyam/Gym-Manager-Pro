@@ -50,7 +50,20 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
   async createGym(gym: any): Promise<Gym> {
-    const [newGym] = await db.insert(gyms).values(gym).returning();
+    const [newGym] = await db.insert(gyms).values({
+      ownerId: gym.ownerId,
+      name: gym.name,
+      address: gym.address,
+      city: gym.city,
+      contactNumber: gym.contactNumber,
+      gymImages: gym.gymImages,
+      gpayQr: gym.gpayQr,
+      phonepeQr: gym.phonepeQr,
+      facilities: gym.facilities,
+      services: gym.services,
+      membershipPlans: gym.membershipPlans,
+      isActive: gym.isActive ?? true,
+    }).returning();
     return newGym;
   }
   async getGym(id: number): Promise<Gym | undefined> {

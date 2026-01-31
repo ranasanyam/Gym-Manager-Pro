@@ -27,6 +27,9 @@ export const gyms = pgTable("gyms", {
   gymImages: jsonb("gym_images"),
   gpayQr: text("gpay_qr"),
   phonepeQr: text("phonepe_qr"),
+  facilities: jsonb("facilities"),
+  services: jsonb("services"),
+  membershipPlans: jsonb("membership_plans"),
   isActive: boolean("is_active").default(true),
 });
 
@@ -41,7 +44,7 @@ export const gymMembers = pgTable("gym_members", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   gymId: integer("gym_id").notNull().references(() => gyms.id),
-  membershipType: text("membership_type", { enum: ["FREE", "PAID", "PERSONAL"] }).notNull(),
+  membershipType: text("membership_type").notNull(),
   startDate: date("start_date").notNull(),
   endDate: date("end_date"),
   assignedTrainerId: integer("assigned_trainer_id").references(() => users.id),
@@ -136,7 +139,20 @@ export const gymMembersRelations = relations(gymMembers, ({ one, many }) => ({
 
 // Base Schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
-export const insertGymSchema = createInsertSchema(gyms).omit({ id: true });
+export const insertGymSchema = createInsertSchema(gyms).omit({ id: true }).extend({
+  facilities: z.array(z.string()).optional(),
+  services: z.array(z.object({
+    name: z.string(),
+    price: z.string(),
+    description: z.string().optional()
+  })).optional(),
+  membershipPlans: z.array(z.object({
+    name: z.string(),
+    price: z.string(),
+    duration: z.string(),
+    features: z.string().optional()
+  })).optional()
+});
 export const insertGymTrainerSchema = createInsertSchema(gymTrainers).omit({ id: true });
 export const insertGymMemberSchema = createInsertSchema(gymMembers).omit({ id: true });
 export const insertClassSchema = createInsertSchema(classes).omit({ id: true });

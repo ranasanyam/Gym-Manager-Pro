@@ -9,6 +9,12 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -140,18 +146,13 @@ export async function registerRoutes(
     res.status(201).json(gym);
   });
 
-  app.get(api.gyms.get.path, isAuthenticated, async (req, res) => {
-    const gym = await storage.getGym(Number(req.params.id));
-    res.json(gym);
-  });
-
-  // List members for a specific gym (owner only)
-  app.get('/api/gyms/:id/members', isAuthenticated, async (req, res) => {
+  app.get(`${api.gyms.get.path}/members`, isAuthenticated, async (req, res) => {
     const user = req.user as any;
     const gymId = Number(req.params.id);
     try {
       const gym = await storage.getGym(gymId);
       if (!gym) return res.status(404).json({ message: 'Gym not found' });
+      // Allow the owner of the gym to see members
       if (gym.ownerId !== user.id) return res.status(403).json({ message: 'Forbidden' });
       const members = await storage.getMembersByGym(gymId);
       res.json(members);
@@ -159,6 +160,11 @@ export async function registerRoutes(
       console.error('Failed to fetch gym members', err);
       res.status(500).json({ message: 'Failed to fetch members' });
     }
+  });
+
+  app.get(api.gyms.get.path, isAuthenticated, async (req, res) => {
+    const gym = await storage.getGym(Number(req.params.id));
+    res.json(gym);
   });
 
   // Members
