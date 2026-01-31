@@ -297,6 +297,32 @@ export async function registerRoutes(
     }
   });
 
+  app.get(`${api.members.list.path}/:id`, isAuthenticated, async (req, res) => {
+    try {
+      const memberId = Number(req.params.id);
+      const member = await storage.getMemberWithUser(memberId);
+      if (!member) return res.status(404).json({ message: 'Member not found' });
+      
+      const [attendance, payments, workoutPlans, dietPlans] = await Promise.all([
+        storage.getAttendanceByMember(memberId),
+        storage.getPaymentsByMember(memberId),
+        storage.getWorkoutPlansByMember(memberId),
+        storage.getDietPlansByMember(memberId)
+      ]);
+
+      res.json({
+        ...member,
+        attendance,
+        payments,
+        workoutPlans,
+        dietPlans
+      });
+    } catch (err) {
+      console.error('Error fetching member details', err);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  });
+
   app.get(api.members.list.path, isAuthenticated, async (req, res) => {
     const user = req.user as any;
     // This needs logic to find the gym first if owner

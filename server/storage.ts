@@ -20,6 +20,9 @@ export interface IStorage {
   createMember(member: any): Promise<GymMember>;
   getMembersByGym(gymId: number): Promise<any[]>;
   getMemberByUserId(userId: number): Promise<GymMember | undefined>;
+  getMemberWithUser(id: number): Promise<any | undefined>;
+  getAttendanceByMember(memberId: number): Promise<any[]>;
+  getPaymentsByMember(memberId: number): Promise<any[]>;
   
   createWorkoutPlan(plan: any): Promise<WorkoutPlan>;
   getWorkoutPlansByMember(memberId: number): Promise<WorkoutPlan[]>;
@@ -89,6 +92,19 @@ export class DatabaseStorage implements IStorage {
   async getMemberByUserId(userId: number): Promise<GymMember | undefined> {
     const [member] = await db.select().from(gymMembers).where(eq(gymMembers.userId, userId));
     return member;
+  }
+  async getMemberWithUser(id: number): Promise<any | undefined> {
+    const [result] = await db.select({
+      member: gymMembers,
+      user: users
+    }).from(gymMembers).leftJoin(users, eq(gymMembers.userId, users.id)).where(eq(gymMembers.id, id));
+    return result;
+  }
+  async getAttendanceByMember(memberId: number): Promise<any[]> {
+    return await db.select().from(attendance).where(eq(attendance.memberId, memberId));
+  }
+  async getPaymentsByMember(memberId: number): Promise<any[]> {
+    return await db.select().from(payments).where(eq(payments.memberId, memberId));
   }
   async createWorkoutPlan(plan: any): Promise<WorkoutPlan> {
     const [newPlan] = await db.insert(workoutPlans).values(plan).returning();
