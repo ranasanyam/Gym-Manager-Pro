@@ -14,6 +14,13 @@ export default function MemberDetailsPage() {
 
   const { data: member, isLoading } = useQuery<any>({
     queryKey: [buildUrl(api.members.list.path + "/:id", { id: id! })],
+    queryFn: async () => {
+      if (!id) return null;
+      const res = await fetch(`/api/members/${id}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch member');
+      return res.json();
+    },
+    enabled: !!id,
   });
 
   if (isLoading) {

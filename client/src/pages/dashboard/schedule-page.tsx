@@ -71,7 +71,7 @@ export default function SchedulePage() {
                     </span>
                     <span className="flex items-center gap-1">
                       <User className="h-3 w-3" />
-                      {cls?.trainer?.fullName || "TBA"}
+                      {cls?.trainerId ? "Trainer assigned" : "TBA"}
                     </span>
                   </div>
                 </div>
@@ -111,7 +111,7 @@ export default function SchedulePage() {
             </div>
             <div className="flex justify-between pt-2">
               <span className="text-muted-foreground">Trainer</span>
-              <span className="font-medium">{selectedClass?.trainer?.fullName || "TBA"}</span>
+              <span className="font-medium">{selectedClass?.trainerId ? "Trainer assigned" : "TBA"}</span>
             </div>
           </div>
           <DialogFooter>

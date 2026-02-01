@@ -20,7 +20,11 @@ export function useUsersList() {
       const res = await fetch(api.members.list.path, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch users");
       const data = await res.json();
-      return data;
+      // api returns member records with a `user` field — map to users for list usage
+      if (Array.isArray(data)) {
+        return data.map((m: any) => m.user).filter(Boolean);
+      }
+      return [];
     },
   });
 }

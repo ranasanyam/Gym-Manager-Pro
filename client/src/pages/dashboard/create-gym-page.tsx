@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertGymSchema } from "@shared/schema";
+import { insertGymSchema, type InsertGym } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { useLocation } from "wouter";
@@ -76,7 +76,7 @@ export default function CreateGymPage() {
     return () => urls.forEach(u => URL.revokeObjectURL(u));
   }, [selectedFiles]);
 
-  const form = useForm({
+  const form = useForm<InsertGym>({
     resolver: zodResolver(insertGymSchema),
     defaultValues: {
       name: "",
@@ -97,6 +97,9 @@ export default function CreateGymPage() {
     control: form.control,
     name: "membershipPlans",
   });
+
+  // ensure appendPlan uses the correct shape
+  const addPlan = () => appendPlan({ name: "", price: "0", duration: "", features: "" });
 
   const createGymMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -286,7 +289,7 @@ export default function CreateGymPage() {
                                 placeholder="0"
                                 value={service.price}
                                 onChange={(e) => {
-                                  const services = [...form.getValues("services")];
+                                  const services = [...(form.getValues("services") || [])];
                                   services[index].price = e.target.value;
                                   form.setValue("services", services);
                                 }}
@@ -304,7 +307,7 @@ export default function CreateGymPage() {
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
                   <div className="flex justify-between items-center">
                     <Label>Membership Plans</Label>
-                    <Button type="button" variant="outline" size="sm" onClick={() => appendPlan({ name: "", price: "", duration: "", features: "" })}>
+                    <Button type="button" variant="outline" size="sm" onClick={addPlan}>
                       <Plus className="w-4 h-4 mr-2" /> Add Plan
                     </Button>
                   </div>
@@ -359,13 +362,13 @@ export default function CreateGymPage() {
                     <FormField control={form.control} name="gpayQr" render={({ field }) => (
                       <FormItem>
                         <FormLabel>GPay UPI ID/Link</FormLabel>
-                        <FormControl><Input placeholder="upi-id@gpay" {...field} /></FormControl>
+                        <FormControl><Input placeholder="upi-id@gpay" {...field} value={field.value ?? ''} /></FormControl>
                       </FormItem>
                     )} />
                     <FormField control={form.control} name="phonepeQr" render={({ field }) => (
                       <FormItem>
                         <FormLabel>PhonePe UPI ID/Link</FormLabel>
-                        <FormControl><Input placeholder="upi-id@ybl" {...field} /></FormControl>
+                        <FormControl><Input placeholder="upi-id@ybl" {...field} value={field.value ?? ''} /></FormControl>
                       </FormItem>
                     )} />
                   </div>

@@ -20,8 +20,13 @@ export default function WorkoutsPage() {
     enabled: user?.role === 'member'
   });
 
-  const { data: plans, isLoading } = useQuery({
+  const { data: plans, isLoading } = useQuery<any[]>({
     queryKey: member ? [buildUrl(api.plans.workouts.list.path, { memberId: member.id })] : ['/api/workouts'],
+    queryFn: async () => {
+      const res = await fetch(member ? buildUrl(api.plans.workouts.list.path, { memberId: member.id }) : '/api/workouts');
+      if (!res.ok) return [];
+      return res.json();
+    },
     enabled: !!member || user?.role !== 'member',
   });
 

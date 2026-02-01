@@ -162,7 +162,9 @@ export async function registerRoutes(
       // Allow the owner of the gym to see members
       if (gym.ownerId !== user.id) return res.status(403).json({ message: 'Forbidden' });
       const members = await storage.getMembersByGym(gymId);
-      res.json(members);
+      // ensure each row explicitly includes the gym object
+      const membersWithGym = members.map((r: any) => ({ ...r, gym }));
+      res.json(membersWithGym);
     } catch (err) {
       console.error('Failed to fetch gym members', err);
       res.status(500).json({ message: 'Failed to fetch members' });
@@ -172,6 +174,42 @@ export async function registerRoutes(
   app.get(api.gyms.get.path, isAuthenticated, async (req, res) => {
     const gym = await storage.getGym(Number(req.params.id));
     res.json(gym);
+  });
+
+  // Update gym (owner only)
+  app.patch(api.gyms.get.path, isAuthenticated, async (req, res) => {
+    const user = req.user as any;
+    const id = Number(req.params.id);
+    try {
+      const gym = await storage.getGym(id);
+      if (!gym) return res.status(404).json({ message: 'Gym not found' });
+      if (gym.ownerId !== user.id) return res.status(403).json({ message: 'Forbidden' });
+
+      // Validate payload using shared schema (partial)
+      // Note: import of insertGymSchema handled in top-level imports
+      const schema = (await import('@shared/schema')).insertGymSchema.partial();
+      let payload: any;
+      try {
+        payload = schema.parse(req.body);
+      } catch (err: any) {
+        return res.status(400).json({ message: 'Validation failed', errors: err?.errors || err?.message });
+      }
+
+      // Build update object and sanitize arrays
+      const update: any = {};
+      if (Object.prototype.hasOwnProperty.call(payload, 'gymImages')) update.gymImages = Array.isArray(payload.gymImages) ? payload.gymImages : gym.gymImages;
+      if (Object.prototype.hasOwnProperty.call(payload, 'facilities')) update.facilities = Array.isArray(payload.facilities) ? payload.facilities : gym.facilities;
+      if (Object.prototype.hasOwnProperty.call(payload, 'services')) update.services = Array.isArray(payload.services) ? payload.services : gym.services;
+
+      const allowedFields = ['name', 'address', 'city', 'contactNumber', 'isActive', 'membershipPlans'];
+      for (const f of allowedFields) if (Object.prototype.hasOwnProperty.call(payload, f)) update[f] = payload[f];
+
+      const updated = await storage.updateGym(id, update);
+      res.json(updated);
+    } catch (err) {
+      console.error('Failed to update gym', err);
+      res.status(500).json({ message: 'Failed to update gym' });
+    }
   });
 
   // Members
@@ -260,11 +298,14 @@ export async function registerRoutes(
         return res.status(500).json({ message: 'Failed to resolve user for member' });
       }
 
-      // verify gym exists
+      // verify gym exists and belongs to authenticated owner
       try {
         const gym = await storage.getGym(Number(gymId));
         if (!gym) {
           return res.status(400).json({ message: 'Specified gym not found' });
+        }
+        if (gym.ownerId !== authUser.id) {
+          return res.status(403).json({ message: 'Forbidden' });
         }
       } catch (err) {
         console.error('Failed to fetch gym by id', gymId, err);
@@ -332,11 +373,52 @@ export async function registerRoutes(
 
   app.get(api.members.list.path, isAuthenticated, async (req, res) => {
     const user = req.user as any;
-    // This needs logic to find the gym first if owner
-    const ownerGyms = await storage.getGymsByOwner(user.id);
-    if (ownerGyms.length === 0) return res.json([]);
-    const members = await storage.getMembersByGym(ownerGyms[0].id);
-    res.json(members);
+    try {
+      const ownerGyms = await storage.getGymsByOwner(user.id);
+      const gymIdParam = req.query.gymId as string | undefined;
+      if (gymIdParam) {
+        const gymId = Number(gymIdParam);
+        const gym = await storage.getGym(gymId);
+        if (!gym) return res.status(404).json({ message: 'Gym not found' });
+        if (gym.ownerId !== user.id) return res.status(403).json({ message: 'Forbidden' });
+        const members = await storage.getMembersByGym(gymId);
+        return res.json(members);
+      }
+
+      // aggregate across all owner gyms
+      const allMembers: any[] = [];
+      for (const g of ownerGyms) {
+        const m = await storage.getMembersByGym(g.id);
+        // map each result to explicitly include the gym object
+        allMembers.push(...m.map((r: any) => ({ ...r, gym: g })));
+      }
+      res.json(allMembers);
+    } catch (err) {
+      console.error('Failed to fetch members', err);
+      res.status(500).json({ message: 'Failed to fetch members' });
+    }
+  });
+
+  // Owner stats
+  app.get('/api/stats/owner', isAuthenticated, async (req, res) => {
+    const user = req.user as any;
+    try {
+      const ownerGyms = await storage.getGymsByOwner(user.id);
+      let activeMembers = 0;
+      let totalRevenue = 0;
+      for (const g of ownerGyms) {
+        const members = await storage.getMembersByGym(g.id);
+        activeMembers += members.length;
+        for (const m of members) {
+          const payments = await storage.getPaymentsByMember(m.member.id);
+          totalRevenue += payments.reduce((s: number, p: any) => s + (p.amount || 0), 0);
+        }
+      }
+      res.json({ totalRevenue, activeMembers });
+    } catch (err) {
+      console.error('Failed to compute owner stats', err);
+      res.status(500).json({ message: 'Failed to compute stats' });
+    }
   });
 
   // Plans

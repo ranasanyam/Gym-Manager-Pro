@@ -1,6 +1,6 @@
 import { 
-  users, gyms, gymTrainers, gymMembers, attendance, payments, workoutPlans, dietPlans, notifications,
-  type User, type InsertUser, type Gym, type GymMember, type WorkoutPlan, type DietPlan
+  users, gyms, gymTrainers, gymMembers, attendance, payments, workoutPlans, dietPlans, notifications, classes,
+  type User, type InsertUser, type Gym, type GymMember, type WorkoutPlan, type DietPlan, type Class
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -16,6 +16,11 @@ export interface IStorage {
   getGym(id: number): Promise<Gym | undefined>;
   getGymsByCity(city: string): Promise<Gym[]>;
   getGymsByOwner(ownerId: number): Promise<Gym[]>;
+  
+  createClass(cls: any): Promise<Class>;
+  getClassesByGym(gymId: number): Promise<Class[]>;
+  getClass(id: number): Promise<Class | undefined>;
+  deleteClass(id: number): Promise<void>;
   
   createMember(member: any): Promise<GymMember>;
   getMembersByGym(gymId: number): Promise<any[]>;
@@ -79,6 +84,20 @@ export class DatabaseStorage implements IStorage {
   async getGymsByOwner(ownerId: number): Promise<Gym[]> {
     return await db.select().from(gyms).where(eq(gyms.ownerId, ownerId));
   }
+  async createClass(cls: any): Promise<Class> {
+    const [newClass] = await db.insert(classes).values(cls).returning();
+    return newClass;
+  }
+  async getClassesByGym(gymId: number): Promise<Class[]> {
+    return await db.select().from(classes).where(eq(classes.gymId, gymId));
+  }
+  async getClass(id: number): Promise<Class | undefined> {
+    const [c] = await db.select().from(classes).where(eq(classes.id, id));
+    return c;
+  }
+  async deleteClass(id: number): Promise<void> {
+    await db.delete(classes).where(eq(classes.id, id));
+  }
   async createMember(member: any): Promise<GymMember> {
     const [newMember] = await db.insert(gymMembers).values(member).returning();
     return newMember;
@@ -86,8 +105,9 @@ export class DatabaseStorage implements IStorage {
   async getMembersByGym(gymId: number): Promise<any[]> {
     return await db.select({
       member: gymMembers,
-      user: users
-    }).from(gymMembers).leftJoin(users, eq(gymMembers.userId, users.id)).where(eq(gymMembers.gymId, gymId));
+      user: users,
+      gym: gyms
+    }).from(gymMembers).leftJoin(users, eq(gymMembers.userId, users.id)).leftJoin(gyms, eq(gymMembers.gymId, gyms.id)).where(eq(gymMembers.gymId, gymId));
   }
   async getMemberByUserId(userId: number): Promise<GymMember | undefined> {
     const [member] = await db.select().from(gymMembers).where(eq(gymMembers.userId, userId));
@@ -96,9 +116,19 @@ export class DatabaseStorage implements IStorage {
   async getMemberWithUser(id: number): Promise<any | undefined> {
     const [result] = await db.select({
       member: gymMembers,
-      user: users
-    }).from(gymMembers).leftJoin(users, eq(gymMembers.userId, users.id)).where(eq(gymMembers.id, id));
+      user: users,
+      gym: gyms
+    }).from(gymMembers).leftJoin(users, eq(gymMembers.userId, users.id)).leftJoin(gyms, eq(gymMembers.gymId, gyms.id)).where(eq(gymMembers.id, id));
     return result;
+  }
+
+  async updateGym(id: number, update: any): Promise<Gym> {
+    const [g] = await db.update(gyms).set(update).where(eq(gyms.id, id)).returning();
+    return g;
+  }
+
+  async deleteMember(id: number): Promise<void> {
+    await db.delete(gymMembers).where(eq(gymMembers.id, id));
   }
   async getAttendanceByMember(memberId: number): Promise<any[]> {
     return await db.select().from(attendance).where(eq(attendance.memberId, memberId));

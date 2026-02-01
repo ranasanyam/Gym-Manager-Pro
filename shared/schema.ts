@@ -154,9 +154,11 @@ export const insertGymSchema = createInsertSchema(gyms).omit({ id: true }).exten
     features: z.string().optional()
   })).optional()
 });
+export type InsertGym = z.infer<typeof insertGymSchema>; 
 export const insertGymTrainerSchema = createInsertSchema(gymTrainers).omit({ id: true });
 export const insertGymMemberSchema = createInsertSchema(gymMembers).omit({ id: true });
 export const insertClassSchema = createInsertSchema(classes).omit({ id: true });
+export type InsertClass = z.infer<typeof insertClassSchema>;
 export const insertAttendanceSchema = createInsertSchema(attendance).omit({ id: true, checkInTime: true });
 export const insertPaymentSchema = createInsertSchema(payments).omit({ id: true, paymentDate: true });
 export const insertWorkoutPlanSchema = createInsertSchema(workoutPlans).omit({ id: true, createdAt: true });

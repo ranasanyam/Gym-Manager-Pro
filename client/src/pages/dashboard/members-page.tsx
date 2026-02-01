@@ -3,21 +3,34 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Users, Search, UserPlus } from "lucide-react";
+import { Plus, Users, Search, UserPlus, Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 
 export default function MembersPage() {
   const { data: members, isLoading } = useQuery({
     queryKey: ['/api/members'],
     queryFn: async () => {
-      const res = await fetch('/api/members');
+      const res = await fetch('/api/members', { credentials: 'include' });
       if (!res.ok) throw new Error("Failed to fetch members");
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    }
+  });
+
+  const { data: ownerGyms } = useQuery({
+    queryKey: ['/api/gyms/owner'],
+    queryFn: async () => {
+      const res = await fetch('/api/gyms/owner', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch gyms');
       return res.json();
     }
   });
+
+  const gymsMap = (ownerGyms || []).reduce((acc: any, g: any) => { acc[g.id] = g; return acc; }, {} as Record<number, any>);
 
   const [search, setSearch] = useState("");
   const [, setLocation] = useLocation();
@@ -34,6 +47,7 @@ export default function MembersPage() {
       const res = await fetch('/api/members', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(data)
       });
       if (!res.ok) throw new Error("Failed to add member");
@@ -42,7 +56,18 @@ export default function MembersPage() {
     onSuccess: () => {
       toast({ title: "Member added successfully" });
       queryClient.invalidateQueries({ queryKey: ['/api/members'] });
-      setOpen(false);
+    }
+  });
+
+  const deleteMemberMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/members/${id}`, { method: 'DELETE', credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to delete member');
+      return true;
+    },
+    onSuccess: () => {
+      toast({ title: 'Member removed' });
+      queryClient.invalidateQueries({ queryKey: ['/api/members'] });
     }
   });
 
@@ -64,7 +89,7 @@ export default function MembersPage() {
             />
           </div>
           <div>
-            <Button className="gap-2" onClick={() => setLocation('/members/create')}>
+            <Button className="gap-2" onClick={() => setLocation('/members/add')}>
               <UserPlus className="h-4 w-4" /> Add Member
             </Button>
           </div>
@@ -91,21 +116,32 @@ export default function MembersPage() {
               <div className="col-span-3 text-right pr-2">Status</div>
             </div>
             {filteredMembers.map((m: any) => (
-              <div key={m.member.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
-                <div className="col-span-4 flex items-center gap-3">
-                  <Avatar className="h-9 w-9 border border-slate-200">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                      {m.user?.fullName?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium text-slate-900">{m.user?.fullName}</span>
+              <div key={m.member.id} onClick={() => setLocation(`/members/${m.member.id}`)} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 cursor-pointer">
+                <div className="col-span-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9 border border-slate-200">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                        {m.user?.fullName?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium text-slate-900">{m.user?.fullName}</div>
+                      <div className="text-xs text-slate-500">{m.gym?.name || gymsMap[m.member?.gymId]?.name || `Gym #${m.gym?.id ?? m.member?.gymId ?? '—'}`}</div>
+                    </div>
+                  </div>
                 </div>
                 <div className="col-span-3 text-sm text-slate-500">{m.user?.mobileNumber}</div>
                 <div className="col-span-2">
                   <Badge variant="outline">{m.member.membershipType}</Badge>
                 </div>
-                <div className="col-span-3 text-right pr-2">
+                <div className="col-span-2 text-right pr-2 flex items-center justify-end gap-2">
                   <Badge className="bg-emerald-500 hover:bg-emerald-600">Active</Badge>
+                  <button className="text-red-500 hover:text-red-700" onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm('Remove this member?')) deleteMemberMutation.mutate(m.member.id);
+                  }}>
+                    <Trash className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             ))}

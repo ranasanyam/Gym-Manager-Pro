@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,8 @@ export default function AddMemberPage() {
     queryKey: ['/api/gyms/owner'],
   });
 
+  const [selectedGymId, setSelectedGymId] = useState<number | undefined>(defaultGymId ? Number(defaultGymId) : undefined);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -76,6 +79,7 @@ export default function AddMemberPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
+      const gymIdToUse = selectedGymId ?? (defaultGymId ? Number(defaultGymId) : ownerGyms?.[0]?.id);
       const payload = {
         mobileNumber: values.mobileNumber,
         fullName: values.name,
@@ -88,7 +92,7 @@ export default function AddMemberPage() {
         goals: values.goals,
         startDate: values.startDate,
         endDate: values.endDate,
-        gymId: defaultGymId ? Number(defaultGymId) : (ownerGyms?.[0]?.id),
+        gymId: gymIdToUse,
       } as any;
 
       if (!payload.gymId) {
@@ -99,6 +103,7 @@ export default function AddMemberPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        credentials: 'include',
       });
 
       if (!res.ok) {
@@ -171,6 +176,31 @@ export default function AddMemberPage() {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* Gym selection */}
+              <div className="mb-4">
+                <FormItem>
+                  <FormLabel>Gym</FormLabel>
+                  <div>
+                    {ownerGyms && ownerGyms.length > 1 ? (
+                      <Select onValueChange={(v) => setSelectedGymId(Number(v))} defaultValue={selectedGymId ? String(selectedGymId) : undefined}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gym" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {ownerGyms.map(g => (
+                            <SelectItem key={g.id} value={String(g.id)}>{g.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="text-sm text-slate-700">{(ownerGyms && ownerGyms[0]) ? ownerGyms[0].name : 'No gym available'}</div>
+                    )}
+                  </div>
+                </FormItem>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -275,7 +305,7 @@ export default function AddMemberPage() {
                           <DropdownMenuContent className="w-56">
                             {goalsOptions.map(option => (
                               <DropdownMenuCheckboxItem
-                                key={option.id}
+                                key={option.value}
                                 checked={field.value?.includes(option.value)}
                                 onCheckedChange={(checked) => {
                                   const current = field.value || [];
